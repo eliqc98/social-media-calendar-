@@ -175,7 +175,11 @@
   .prep-title-row{ display:flex; align-items:center; gap:8px; }
   .prep-title-row .prep-title{ flex:1; font-size:14.5px; cursor:pointer; }
   .prep-title-row .prep-title:hover{ text-decoration:underline; text-decoration-color:var(--accent); }
-  .prep-date{ flex:none; width:132px; font-size:12px; padding:5px 7px; }
+  .prep-dates{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .prep-date-field{ display:flex; align-items:center; gap:7px; margin:0; }
+  .prep-date-field span{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; font-weight:700; color:var(--ink-muted); margin:0; }
+  .prep-date-field input{ width:132px; font-size:12px; padding:5px 7px; }
+  .prep-posts-on{ font-size:12px; color:var(--ink-muted); }
   .script-box{ width:100%; min-height:130px; font-size:13.5px; line-height:1.6; font-family:inherit; }
   .status-seg{ display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; align-self:flex-start; }
   .status-seg button{ border:none; background:var(--surface-raised); padding:6px 10px; font-size:11px; font-weight:700; color:var(--ink-2); cursor:pointer; }
@@ -1044,6 +1048,11 @@ function readyBadge(idea){
   return '<span class="status-chip good">✓ Posted</span>';
 }
 
+// Prep day defaults to a week before the post date — she batch-prepares
+// everything one week ahead — but is stored separately so it can be
+// overridden without touching when the post actually goes live.
+function prepDateValue(idea){ return idea.prepDate || (idea.date ? addDays(idea.date,-7) : ''); }
+
 function prepCard(idea, slotLabel){
   return `
     <div class="prep-card" data-id="${idea.id}">
@@ -1056,9 +1065,15 @@ function prepCard(idea, slotLabel){
         ${readyBadge(idea)}
       </div>
       <div class="prep-title-row">
-        <input type="date" class="prep-date" data-id="${idea.id}" value="${idea.date||''}" title="Change the scheduled day">
         <b class="prep-title" data-open="${idea.id}" title="Open full details">${esc(idea.title)}</b>
         <button class="chip-remove" data-unschedule-chip="${idea.id}" title="Remove from this week — back to bank" aria-label="Remove from this week">×</button>
+      </div>
+      <div class="prep-dates">
+        <label class="prep-date-field">
+          <span>Prep day</span>
+          <input type="date" class="prep-when" data-id="${idea.id}" value="${prepDateValue(idea)}" title="When you'll write/record this — independent of the post date">
+        </label>
+        <span class="prep-posts-on" title="Set from Calendar or the full editor">Posts ${idea.date ? esc(fmtDay(idea.date)) : '—'}</span>
       </div>
       <div class="status-seg" data-id="${idea.id}">
         ${STATUSES.map(s=>`<button data-set-status="${s.id}" class="${idea.status===s.id?'active':''}">${esc(s.label)}</button>`).join('')}
@@ -1091,10 +1106,10 @@ function bindProductionInteractions(){
   document.querySelectorAll('.prep-title[data-open]').forEach(el=>{
     el.addEventListener('click', ()=> openIdeaModal(el.dataset.open));
   });
-  document.querySelectorAll('.prep-date').forEach(el=>{
+  document.querySelectorAll('.prep-when').forEach(el=>{
     el.addEventListener('change', ()=>{
       const idea = state.ideas.find(i=>i.id===el.dataset.id);
-      if(idea){ idea.date = el.value || null; save(); render(); }
+      if(idea){ idea.prepDate = el.value || null; save(); render(); }
     });
   });
   document.querySelectorAll('.status-seg [data-set-status]').forEach(el=>{
@@ -1212,7 +1227,8 @@ function rowTemplate(i){
           ${i.platforms.map(p=>outlinePill(PLATFORM_MAP[p].label)).join('')}
           ${outlinePill(i.language)}
           ${outlinePill(STATUS_MAP[i.status].label)}
-          ${i.date ? outlinePill('📅 '+fmtDay(i.date)) : ''}
+          ${i.date ? outlinePill('📅 Posts '+fmtDay(i.date)) : ''}
+          ${i.prepDate ? outlinePill('✍️ Prep '+fmtDay(i.prepDate)) : ''}
         </div>
       </div>
       <div class="actions">
@@ -1231,7 +1247,7 @@ function openIdeaModal(id, presetDate, presetPillar){
   const editing = !!id;
   const idea = editing ? state.ideas.find(i=>i.id===id) : {
     id:null, title:'', pillar:presetPillar||'career', format:'teaching', platforms:['tiktok'],
-    language:'ES', status:'idea', date: presetDate||null, notes:''
+    language:'ES', status:'idea', date: presetDate||null, prepDate:null, notes:''
   };
   const root = document.getElementById('modal-root');
   root.innerHTML = `
@@ -1258,7 +1274,8 @@ function openIdeaModal(id, presetDate, presetPillar){
             </div>
             <p style="color:var(--ink-muted); font-size:11.5px; margin:6px 0 0;">Instagram always cross-posts to TikTok too.</p>
           </div>
-          <div class="field"><label for="m-date">Scheduled date</label><input id="m-date" type="date" value="${idea.date||''}"></div>
+          <div class="field"><label for="m-date">Posts on (Calendar)</label><input id="m-date" type="date" value="${idea.date||''}"></div>
+          <div class="field"><label for="m-prep-date">Prep day (Batch Prep)</label><input id="m-prep-date" type="date" value="${prepDateValue(idea)}" placeholder="defaults to 1 week before"></div>
         </div>
         <div class="field" style="margin-top:14px;">
           <label for="m-notes">Notes</label>
@@ -1307,6 +1324,7 @@ function openIdeaModal(id, presetDate, presetPillar){
       language: document.getElementById('m-language').value,
       status: document.getElementById('m-status').value,
       date: document.getElementById('m-date').value || null,
+      prepDate: document.getElementById('m-prep-date').value || null,
       notes: document.getElementById('m-notes').value,
     };
     if(editing){
@@ -1391,11 +1409,11 @@ document.getElementById('btn-export').addEventListener('click', ()=>{
   saveFile('content-ecosystem-calendar.json', JSON.stringify(state.ideas, null, 2), 'application/json');
 });
 document.getElementById('btn-export-csv').addEventListener('click', ()=>{
-  const cols = ['Title','Pillar','Objective','Platform','Format','Language','Status','Date','Notes'];
+  const cols = ['Title','Pillar','Objective','Platform','Format','Language','Status','Post Date','Prep Date','Script/Notes'];
   const rows = state.ideas.map(i=>[
     i.title, PILLAR_MAP[i.pillar].label, OBJECTIVE_MAP[PILLAR_OBJECTIVE[i.pillar]].short,
     platformLabels(i), FORMAT_MAP[i.format].label, i.language,
-    STATUS_MAP[i.status].label, i.date||'', i.notes||''
+    STATUS_MAP[i.status].label, i.date||'', i.prepDate||'', i.notes||''
   ]);
   const csv = [cols, ...rows].map(r=> r.map(v=>{
     const s = String(v==null?'':v).replace(/"/g,'""');

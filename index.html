@@ -1,0 +1,1011 @@
+<title>Content Ecosystem Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    color-scheme: light;
+    --page:#f9f9f7; --surface:#fcfcfb; --surface-raised:#ffffff;
+    --ink:#0b0b0b; --ink-2:#52514e; --ink-muted:#898781;
+    --gridline:#e1e0d9; --border:rgba(11,11,11,0.10);
+    --accent:#6B4A33; --accent-ink:#ffffff; --accent-tint:#efe6df;
+    --good:#0ca30c; --warning:#c98500; --critical:#d03b3b;
+    --good-tint:#e6f5e6; --warning-tint:#fbeed4; --critical-tint:#fbe4e2;
+
+    --p-career:#2a78d6;         --p-career-tint:#e4eefa;
+    --p-orinti:#eb6834;         --p-orinti-tint:#fcece3;
+    --p-eluk:#1baf7a;           --p-eluk-tint:#e2f5ee;
+    --p-studies:#c98500;        --p-studies-tint:#fbeed4;
+    --p-mindset:#c14a76;        --p-mindset-tint:#fae4ed;
+    --p-money:#1f7a1f;          --p-money-tint:#e3f0e3;
+    --p-representation:#4a3aa7; --p-representation-tint:#e9e6f7;
+    --p-lifestyle:#c9403f;      --p-lifestyle-tint:#fae3e2;
+
+    --obj-growth:#2a78d6; --obj-orinti:#eb6834; --obj-eluk:#1baf7a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --page:#0d0d0d; --surface:#1a1a19; --surface-raised:#202220;
+      --ink:#ffffff; --ink-2:#c3c2b7; --ink-muted:#948f86;
+      --gridline:#2c2c2a; --border:rgba(255,255,255,0.12);
+      --accent:#d9b483; --accent-ink:#241b12; --accent-tint:#332821;
+      --good:#3ecb3e; --warning:#f0ae5c; --critical:#e66767;
+      --good-tint:#123312; --warning-tint:#3a2c14; --critical-tint:#3a1b19;
+
+      --p-career:#3987e5;         --p-career-tint:#122238;
+      --p-orinti:#d95926;         --p-orinti-tint:#33200f;
+      --p-eluk:#199e70;           --p-eluk-tint:#0f2c22;
+      --p-studies:#e0a53c;        --p-studies-tint:#332812;
+      --p-mindset:#d55181;        --p-mindset-tint:#331c26;
+      --p-money:#4fae4f;          --p-money-tint:#122b12;
+      --p-representation:#9085e9; --p-representation-tint:#231f3d;
+      --p-lifestyle:#e66767;      --p-lifestyle-tint:#331917;
+
+      --obj-growth:#3987e5; --obj-orinti:#d95926; --obj-eluk:#199e70;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19; --surface-raised:#202220;
+    --ink:#ffffff; --ink-2:#c3c2b7; --ink-muted:#948f86;
+    --gridline:#2c2c2a; --border:rgba(255,255,255,0.12);
+    --accent:#d9b483; --accent-ink:#241b12; --accent-tint:#332821;
+    --good:#3ecb3e; --warning:#f0ae5c; --critical:#e66767;
+    --good-tint:#123312; --warning-tint:#3a2c14; --critical-tint:#3a1b19;
+
+    --p-career:#3987e5;         --p-career-tint:#122238;
+    --p-orinti:#d95926;         --p-orinti-tint:#33200f;
+    --p-eluk:#199e70;           --p-eluk-tint:#0f2c22;
+    --p-studies:#e0a53c;        --p-studies-tint:#332812;
+    --p-mindset:#d55181;        --p-mindset-tint:#331c26;
+    --p-money:#4fae4f;          --p-money-tint:#122b12;
+    --p-representation:#9085e9; --p-representation-tint:#231f3d;
+    --p-lifestyle:#e66767;      --p-lifestyle-tint:#331917;
+
+    --obj-growth:#3987e5; --obj-orinti:#d95926; --obj-eluk:#199e70;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--page); color:var(--ink);
+    font-family:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size:15px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:"Fraunces", Georgia, serif; font-weight:600; text-wrap:balance; margin:0; }
+  a{color:inherit;}
+  button{font-family:inherit;}
+  ::selection{ background:var(--accent-tint); }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  .app{ display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+  @media (max-width:840px){ .app{ grid-template-columns:1fr; } .rail{ position:static; flex-direction:row; overflow-x:auto; border-right:none; border-bottom:1px solid var(--border); } .rail-title{display:none;} }
+
+  .rail{
+    position:sticky; top:0; align-self:start; height:100vh;
+    display:flex; flex-direction:column; gap:4px;
+    padding:22px 14px; border-right:1px solid var(--border);
+    background:var(--surface);
+  }
+  .rail-brand{ padding:2px 10px 18px; }
+  .rail-brand .eyebrow{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-muted); font-weight:600; }
+  .rail-brand h1{ font-size:20px; margin-top:4px; border-bottom:2px solid var(--accent); display:inline-block; padding-bottom:4px; }
+  .nav-tab{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px;
+    color:var(--ink-2); font-weight:600; font-size:14px; cursor:pointer; border:1px solid transparent;
+    background:transparent; text-align:left; white-space:nowrap;
+  }
+  .nav-tab:hover{ background:var(--accent-tint); color:var(--ink); }
+  .nav-tab[aria-current="true"]{ background:var(--ink); color:var(--surface); }
+  .nav-tab .count{ margin-left:auto; font-size:12px; color:var(--ink-muted); font-variant-numeric:tabular-nums; }
+  .nav-tab[aria-current="true"] .count{ color:var(--surface); opacity:.7; }
+  .rail-foot{ margin-top:auto; padding:10px; display:flex; flex-direction:column; gap:8px; }
+  .rail-foot button{ font-size:12px; }
+
+  main{ padding:28px 32px 80px; max-width:1180px; }
+  @media (max-width:640px){ main{ padding:18px 16px 60px; } }
+
+  .page-head{ margin-bottom:22px; }
+  .page-head .eyebrow{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-muted); font-weight:600; }
+  .page-head h2{ font-size:26px; margin-top:4px; }
+  .page-head p{ color:var(--ink-2); max-width:60ch; margin-top:6px; }
+
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; }
+  .grid{ display:grid; gap:16px; }
+  .stat-row{ grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); margin-bottom:16px; }
+  .stat-tile .label{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); font-weight:600; }
+  .stat-tile .value{ font-family:"Fraunces",serif; font-size:34px; margin-top:6px; font-variant-numeric:tabular-nums; }
+  .stat-tile .sub{ font-size:12.5px; color:var(--ink-2); margin-top:4px; }
+
+  .section-title{ font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); font-weight:700; margin-bottom:10px; }
+
+  /* --- objective balance bar --- */
+  .balance-legend{ display:flex; gap:18px; flex-wrap:wrap; margin-bottom:12px; font-size:13px; }
+  .balance-legend .item{ display:flex; align-items:center; gap:7px; color:var(--ink-2); }
+  .swatch{ width:10px; height:10px; border-radius:3px; flex:none; }
+  .balance-track{ position:relative; height:26px; border-radius:8px; overflow:hidden; background:var(--gridline); display:flex; }
+  .balance-seg{ height:100%; position:relative; min-width:2px; }
+  .balance-seg + .balance-seg{ border-left:2px solid var(--surface); }
+  .balance-ticks{ position:relative; height:14px; margin-top:2px; }
+  .balance-tick{ position:absolute; top:0; width:1px; height:8px; background:var(--ink-muted); }
+  .balance-tick::after{ content:attr(data-label); position:absolute; top:10px; left:50%; transform:translateX(-50%); font-size:10px; color:var(--ink-muted); white-space:nowrap; }
+  .balance-readout{ display:grid; gap:8px; margin-top:16px; }
+  .balance-row{ display:flex; align-items:center; gap:10px; font-size:13.5px; }
+  .balance-row .name{ flex:none; width:230px; color:var(--ink-2); display:flex; align-items:center; gap:7px; }
+  .balance-row .pct{ font-variant-numeric:tabular-nums; font-weight:600; }
+  .status-chip{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:3px 8px; border-radius:999px; }
+  .status-chip.good{ background:var(--good-tint); color:var(--good); }
+  .status-chip.warning{ background:var(--warning-tint); color:var(--warning); }
+  .status-chip.critical{ background:var(--critical-tint); color:var(--critical); }
+
+  .checklist{ display:grid; gap:10px; margin-top:8px; }
+  .check-item{ display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:13.5px; }
+  .check-item .dot{ width:20px; height:20px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+  .check-item.met .dot{ background:var(--good-tint); color:var(--good); }
+  .check-item.unmet .dot{ background:var(--critical-tint); color:var(--critical); }
+  .check-item .txt b{ font-weight:700; }
+  .check-item .txt span{ color:var(--ink-muted); font-size:12px; }
+
+  /* --- pills / tags --- */
+  .pill{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap; }
+  .pill .dot{ width:7px; height:7px; border-radius:50%; flex:none; }
+  .pill-outline{ border:1px solid var(--border); color:var(--ink-2); font-weight:600; background:transparent; }
+
+  /* --- calendar --- */
+  .cal-toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .cal-toolbar .range{ font-weight:600; font-size:15px; margin-right:auto; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
+  @media (max-width:900px){ .cal-grid{ grid-template-columns:1fr; } }
+  .day-card{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px; min-height:170px; display:flex; flex-direction:column; gap:8px; }
+  .day-card.today{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+  .day-head{ display:flex; align-items:baseline; justify-content:space-between; }
+  .day-head .dow{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); font-weight:700; }
+  .day-head .dnum{ font-family:"Fraunces",serif; font-size:18px; }
+  .day-items{ display:flex; flex-direction:column; gap:6px; flex:1; }
+  .idea-chip{ border:1px solid var(--border); border-left:3px solid var(--chip-color,var(--accent)); border-radius:8px; padding:6px 8px; font-size:12.5px; cursor:pointer; background:var(--surface-raised); }
+  .idea-chip:hover{ background:var(--accent-tint); }
+  .idea-chip .t{ font-weight:600; display:block; margin-bottom:2px; }
+  .idea-chip .meta{ color:var(--ink-muted); font-size:11px; }
+  .day-add{ border:1px dashed var(--border); border-radius:8px; background:transparent; color:var(--ink-muted); font-size:12px; padding:6px; cursor:pointer; font-weight:600; }
+  .day-add:hover{ color:var(--ink); border-color:var(--accent); }
+  .day-empty{ color:var(--ink-muted); font-size:12px; font-style:italic; }
+
+  /* --- idea bank --- */
+  .filter-bar{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; align-items:center; }
+  .filter-bar select, .filter-bar input[type=search]{ font-size:13px; }
+  .idea-list{ display:grid; gap:10px; }
+  .idea-row{ display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; padding:12px 14px; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+  .idea-row .main{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .idea-row .title{ font-weight:600; font-size:14px; }
+  .idea-row .tags{ display:flex; gap:6px; flex-wrap:wrap; }
+  .idea-row .actions{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+  .empty-state{ text-align:center; padding:50px 20px; color:var(--ink-muted); }
+
+  /* --- buttons / inputs --- */
+  .btn{ font-size:12.5px; font-weight:700; padding:7px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface-raised); color:var(--ink); cursor:pointer; }
+  .btn:hover{ border-color:var(--accent); }
+  .btn-primary{ background:var(--ink); color:var(--surface); border-color:var(--ink); }
+  .btn-primary:hover{ opacity:.88; border-color:var(--ink); }
+  .btn-ghost{ background:transparent; border-color:transparent; color:var(--ink-2); }
+  .btn-ghost:hover{ background:var(--accent-tint); color:var(--ink); }
+  .btn-danger{ color:var(--critical); }
+  .btn-sm{ padding:5px 9px; font-size:11.5px; }
+  input,select,textarea{
+    font-family:inherit; font-size:13.5px; padding:8px 10px; border-radius:8px;
+    border:1px solid var(--border); background:var(--surface-raised); color:var(--ink);
+  }
+  textarea{ resize:vertical; min-height:70px; }
+  label{ font-size:12px; font-weight:700; color:var(--ink-2); display:block; margin-bottom:5px; }
+  .field{ display:flex; flex-direction:column; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  /* --- modal --- */
+  .overlay{ position:fixed; inset:0; background:rgba(11,11,11,.45); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50; }
+  :root[data-theme="dark"] .overlay, :root:not([data-theme="light"]) .overlay{ background:rgba(0,0,0,.6); }
+  .modal{ background:var(--surface-raised); border:1px solid var(--border); border-radius:16px; padding:24px; width:100%; max-width:520px; max-height:88vh; overflow:auto; }
+  .modal h3{ font-size:20px; margin-bottom:16px; }
+  .modal .grid{ margin-bottom:14px; }
+  .modal-foot{ display:flex; justify-content:space-between; align-items:center; margin-top:18px; gap:10px; }
+  .picker-list{ display:grid; gap:6px; max-height:280px; overflow:auto; margin-top:10px; }
+  .picker-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; cursor:pointer; font-size:13px; }
+  .picker-row:hover{ border-color:var(--accent); background:var(--accent-tint); }
+
+  .toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--surface); padding:10px 18px; border-radius:999px; font-size:13px; font-weight:600; z-index:80; }
+  .visually-hidden{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+</style>
+
+<div class="app">
+  <nav class="rail" aria-label="Views">
+    <div class="rail-brand">
+      <div class="eyebrow">Elizabeth Quishpi</div>
+      <h1>Content Ecosystem</h1>
+    </div>
+    <button class="nav-tab" data-view="dashboard">Dashboard<span class="count" id="nav-count-dashboard"></span></button>
+    <button class="nav-tab" data-view="calendar">Calendar<span class="count" id="nav-count-calendar"></span></button>
+    <button class="nav-tab" data-view="bank">Idea Bank<span class="count" id="nav-count-bank"></span></button>
+    <div class="rail-foot">
+      <button class="btn btn-ghost" id="btn-export">Export JSON</button>
+      <button class="btn btn-ghost" id="btn-import">Import JSON</button>
+      <input type="file" id="file-import" accept="application/json" class="visually-hidden">
+      <button class="btn btn-ghost" id="btn-export-csv">Export CSV</button>
+      <button class="btn btn-ghost btn-danger" id="btn-reset">Reset to starter ideas</button>
+    </div>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script>
+/* ============================= DATA MODEL ============================= */
+
+const PILLARS = [
+  { id:'career',         label:'Career' },
+  { id:'studies',        label:'Studies & Learning' },
+  { id:'lifestyle',      label:'Lifestyle' },
+  { id:'mindset',        label:'Mindset' },
+  { id:'representation', label:'Representation & First-Gen' },
+  { id:'money',          label:'Money & Financial Literacy' },
+  { id:'orinti',         label:'Orinti (Founder)' },
+  { id:'eluk',           label:'Empower LATAM UK' },
+];
+const PILLAR_MAP = Object.fromEntries(PILLARS.map(p=>[p.id,p]));
+
+// which funnel objective each pillar rolls up into
+const PILLAR_OBJECTIVE = {
+  career:'growth', studies:'growth', lifestyle:'growth', mindset:'growth',
+  representation:'growth', money:'growth', orinti:'orinti', eluk:'eluk',
+};
+
+const OBJECTIVES = [
+  { id:'growth', label:'Audience Growth — Personal Brand', short:'Growth', target:55, colorVar:'--obj-growth',
+    blurb:'Career, studies, lifestyle, mindset, representation & money — the trust engine.' },
+  { id:'eluk',   label:'Empower LATAM UK — Impact', short:'ELUK', target:25, colorVar:'--obj-eluk',
+    blurb:'Mentee stories, impact stats, advocacy — turns audience into community.' },
+  { id:'orinti', label:'Orinti — Founder / Agency', short:'Orinti', target:20, colorVar:'--obj-orinti',
+    blurb:'Founder journey & client work — turns reputation into paying clients.' },
+];
+const OBJECTIVE_MAP = Object.fromEntries(OBJECTIVES.map(o=>[o.id,o]));
+
+const PLATFORMS = [
+  { id:'tiktok',    label:'TikTok' },
+  { id:'reels',     label:'IG Reels' },
+  { id:'instagram', label:'IG Feed/Carousel' },
+  { id:'linkedin',  label:'LinkedIn' },
+];
+const PLATFORM_MAP = Object.fromEntries(PLATFORMS.map(p=>[p.id,p]));
+
+const FORMATS = [
+  { id:'teaching',  label:'Teaching Post' },
+  { id:'vlog',      label:'Vlog' },
+  { id:'social',    label:'Social/Story' },
+  { id:'storytime', label:'Storytime' },
+  { id:'carousel',  label:'Carousel' },
+  { id:'demo',      label:'Screen-Record Demo' },
+  { id:'talking',   label:'Talking Head' },
+  { id:'founder',   label:'Founder BTS' },
+];
+const FORMAT_MAP = Object.fromEntries(FORMATS.map(f=>[f.id,f]));
+
+const STATUSES = [
+  { id:'idea',     label:'Idea' },
+  { id:'scripted', label:'Scripted' },
+  { id:'filmed',   label:'Filmed' },
+  { id:'posted',   label:'Posted' },
+];
+const STATUS_MAP = Object.fromEntries(STATUSES.map(s=>[s.id,s]));
+
+const LANGS = [
+  { id:'ES', label:'Español' },
+  { id:'EN', label:'English' },
+  { id:'BI', label:'Bilingual' },
+];
+
+const WEEKLY_MINIMUMS = [
+  { format:'teaching', label:'1 teaching post' },
+  { format:'vlog',     label:'1 vlog' },
+  { format:'social',   label:'1 social/story (min.)' },
+];
+
+/* ============================= SEED CONTENT BANK ============================= */
+let seedCounter = 0;
+function I(title, pillar, format, platform, lang){
+  seedCounter++;
+  return {
+    id: 'seed-'+seedCounter,
+    title, pillar,
+    format: format || 'teaching',
+    platform: platform || 'tiktok',
+    language: lang || 'ES',
+    status: 'idea',
+    date: null,
+    notes: '',
+  };
+}
+
+const SEED_IDEAS = [
+  // ---------------- CAREER ----------------
+  I("CV Building — Essential Tips","career","teaching","tiktok","ES"),
+  I("Building Experience While Studying","career","teaching","tiktok","ES"),
+  I("Grades Aren't Everything — Why Industry Experience Matters Too","career","teaching","tiktok","EN"),
+  I("The Importance of Transferable Skills","career","teaching","tiktok","EN"),
+  I("Unpaid vs Paid Internships — How to Choose","career","teaching","tiktok","ES"),
+  I("Volunteering as a Way Into Your Industry","career","teaching","tiktok","ES"),
+  I("How to Search for Jobs on LinkedIn (Screen-Recording Demo)","career","demo","linkedin","EN"),
+  I("Find People From Your University on LinkedIn","career","demo","linkedin","EN"),
+  I("Networking on LinkedIn — The Basics","career","teaching","linkedin","ES"),
+  I("How I Actually Network on LinkedIn (My Method)","career","teaching","linkedin","ES"),
+  I("Example Messages for Connecting on LinkedIn","career","carousel","linkedin","ES"),
+  I("In-Person Networking — What's Worked for Me","career","storytime","tiktok","ES"),
+  I("The 2-Minute Elevator Pitch Guide","career","teaching","tiktok","EN"),
+  I("Why Following Up Is the Most Important Step","career","teaching","tiktok","ES"),
+  I("It's Okay Not to Know What Career You Want","career","storytime","tiktok","ES"),
+  I("My Journey to Studying English Philology","career","storytime","tiktok","ES"),
+  I("I've Never Been Rejected in a Job Interview — My 5 Tips","career","teaching","tiktok","EN"),
+  I("Inside My 20-Page Interview Prep Document","career","demo","tiktok","EN"),
+  I("The STAR Method for Interview Answers","career","teaching","tiktok","EN"),
+  I("Questions YOU Should Ask an Interviewer","career","teaching","tiktok","EN"),
+  I("Researching a Company on Glassdoor Before an Interview (Demo)","career","demo","linkedin","EN"),
+  I("I Got the Job! (Storytime)","career","vlog","tiktok","ES"),
+  I("Apply Even If You Don't Meet Every Requirement","career","teaching","tiktok","EN"),
+  I("How to Prepare for Any Interview","career","teaching","tiktok","EN"),
+  I("What I Learned in My First Corporate Job","career","vlog","tiktok","EN"),
+  I("Starting Your Career in the UK as a Foreigner","career","teaching","tiktok","EN"),
+  I("How I Handle Impostor Syndrome at Work","career","storytime","tiktok","ES"),
+  I("Burnout in Your First Job — What Helped Me","career","storytime","tiktok","ES"),
+  I("My Work-Life Balance Rules","career","teaching","tiktok","EN"),
+  I("Personal Branding Inside Your Team and Company","career","teaching","linkedin","EN"),
+  I("How to Ask for a Raise","career","teaching","linkedin","EN"),
+  I("How to Negotiate Your Salary","career","teaching","linkedin","EN"),
+  I("Working Hard vs Being Visible — They're Not the Same","career","teaching","linkedin","EN"),
+  I("Networking as an Introvert","career","teaching","tiktok","EN"),
+  I("What Companies Are Actually Looking For","career","teaching","linkedin","EN"),
+  I("How I Went From £25k to £50k+","career","storytime","linkedin","EN"),
+  I("The Email That Changed My Career","career","storytime","linkedin","EN"),
+  I("Phrases That Make You Sound More Senior in Meetings","career","carousel","linkedin","EN"),
+  I("How to Write a CV That Passes the Filters","career","teaching","tiktok","EN"),
+  I("The Mistake That Cost Me Promotions","career","storytime","linkedin","EN"),
+  I("Getting Into Big Companies Without Connections","career","teaching","linkedin","EN"),
+  I("What to Do in Your First 90 Days at a New Job","career","teaching","linkedin","EN"),
+  I("What I Want From My Career in 2026","career","storytime","linkedin","EN"),
+  I("How I'm Becoming More Visible Professionally","career","teaching","linkedin","EN"),
+
+  // ---------------- STUDIES & LEARNING ----------------
+  I("Why I Studied English Studies + Business","studies","teaching","tiktok","EN"),
+  I("The Value of an Exchange Year Abroad When You're Young","studies","teaching","tiktok","EN"),
+  I("My Experience as a First-Gen University Student","studies","storytime","tiktok","ES"),
+  I("How to Apply for a Master's in the UK","studies","teaching","tiktok","EN"),
+  I("How I Got a First-Class Master's Grade","studies","teaching","tiktok","EN"),
+  I("It's Okay Not to Know What You Want to Study","studies","storytime","tiktok","ES"),
+  I("What I Loved About UK Universities (Societies, Fewer Classes, Time to Work)","studies","teaching","tiktok","EN"),
+  I("How to Choose a Career With Good Return on Investment","studies","teaching","tiktok","EN"),
+  I("Good University vs Prestigious University — The Real Difference","studies","teaching","tiktok","EN"),
+  I("How to Get Scholarships (and Where to Find Them)","studies","teaching","tiktok","ES"),
+  I("How to Actually Study Smart, Not Just Hard","studies","teaching","tiktok","ES"),
+  I("What I Learned in My Master's That Actually Mattered","studies","storytime","tiktok","EN"),
+  I("University Isn't the Only Path","studies","teaching","tiktok","ES"),
+  I("Scholarships and Opportunities Almost Nobody Applies To","studies","teaching","tiktok","ES"),
+  I("How to Learn High-Value Skills for Free","studies","teaching","tiktok","EN"),
+  I("What to Study If You Want to Work in Tech or Business","studies","teaching","tiktok","EN"),
+  I("How to Use LinkedIn as a Student","studies","demo","linkedin","EN"),
+  I("The Highest-Paying Skills in 2026","studies","teaching","tiktok","EN"),
+  I("How to Learn Excel/AI/Sales for Free","studies","demo","tiktok","EN"),
+  I("Why Reading Changed My Life","studies","storytime","tiktok","ES"),
+  I("The Best Return-on-Investment Education Choices","studies","teaching","tiktok","EN"),
+  I("How to Find Mentors","studies","teaching","linkedin","EN"),
+  I("Books You Need to Read in 2026","studies","carousel","tiktok","EN"),
+  I("The Skills I'm Building for 2026","studies","teaching","tiktok","EN"),
+
+  // ---------------- LIFESTYLE ----------------
+  I("Why London Is the Best Place to Live in Your 20s","lifestyle","teaching","tiktok","EN"),
+  I("What Traveling Alone Has Taught Me","lifestyle","storytime","tiktok","EN"),
+  I("How Much Your Life Changes When You Start Working","lifestyle","teaching","tiktok","EN"),
+  I("Settlement Status — What It Is and How It Works","lifestyle","teaching","tiktok","EN"),
+  I("Let's Talk About Your Early 20s","lifestyle","storytime","tiktok","EN"),
+  I("What Living Abroad Has Taught Me","lifestyle","storytime","tiktok","EN"),
+  I("Being Latina Is Our Power","lifestyle","teaching","instagram","ES"),
+  I("Reset Your Space Before 2026","lifestyle","demo","tiktok","EN"),
+  I("Capsule Wardrobe for 2026","lifestyle","teaching","tiktok","EN"),
+  I("Building a Morning Routine for 2026","lifestyle","vlog","tiktok","EN"),
+  I("Building a Night Routine for 2026","lifestyle","vlog","tiktok","EN"),
+  I("Hobbies That Help You Disconnect Without Burning Out","lifestyle","teaching","tiktok","EN"),
+
+  // ---------------- MINDSET ----------------
+  I("Be Grateful for Your Parents","mindset","storytime","tiktok","ES"),
+  I("Hard Work Pays Off — My Story","mindset","storytime","tiktok","ES"),
+  I("Surround Yourself With People Who Add to You","mindset","teaching","tiktok","ES"),
+  I("You Are the Average of Your 5 Closest People","mindset","teaching","tiktok","EN"),
+  I("My Parents Had Very Little but Gave Me Everything","mindset","storytime","tiktok","ES"),
+  I("I'm 25 — My Advice to My Younger Self","mindset","teaching","tiktok","ES"),
+  I("The Importance of Your Inner Dialogue","mindset","teaching","tiktok","ES"),
+  I("Why My Standards Are So High — My Parents","mindset","storytime","tiktok","ES"),
+  I("How I Cope With Impostor Syndrome","mindset","storytime","tiktok","ES"),
+  I("Why Vision Boards Actually Work","mindset","teaching","tiktok","ES"),
+  I("What I'm Leaving Behind This Year","mindset","storytime","tiktok","ES"),
+  I("The Quarter-Life Crisis, Honestly","mindset","storytime","tiktok","EN"),
+  I("Self-Sabotage — You're Your Own Worst Enemy","mindset","teaching","tiktok","ES"),
+  I("The Art of Working Hard","mindset","teaching","tiktok","ES"),
+  I("My End-of-Year Review","mindset","vlog","tiktok","EN"),
+  I("My 2026 Vision Board — What's In, What's Out","mindset","teaching","tiktok","EN"),
+  I("How to Build a Vision Board Around Pillars","mindset","demo","tiktok","EN"),
+  I("Defining My Priorities for 2026","mindset","teaching","tiktok","EN"),
+  I("I Stopped Setting Annual Goals — Here's What I Do Instead","mindset","teaching","tiktok","EN"),
+  I("The Most Common Mistake When Planning a New Year","mindset","teaching","tiktok","EN"),
+  I("What I'm Leaving Behind Before 2026","mindset","storytime","tiktok","EN"),
+  I("The Habits I'm Building for 2026","mindset","vlog","tiktok","EN"),
+  I("The Limits I'm Setting for My Future","mindset","storytime","tiktok","EN"),
+  I("If You Want to Start 2026 Strong, Start Here","mindset","teaching","tiktok","EN"),
+
+  // ---------------- REPRESENTATION & FIRST-GEN ----------------
+  I("What I Learned Being the Daughter of Immigrants","representation","storytime","tiktok","ES"),
+  I("The Hidden Advantages of Growing Up in an Immigrant Family","representation","teaching","tiktok","ES"),
+  I("The Guilt of Succeeding More Than Your Parents Did","representation","storytime","tiktok","ES"),
+  I("Being the First in My Family to Go to University","representation","storytime","tiktok","ES"),
+  I("How to Support Your Family Without Sacrificing Your Future","representation","teaching","tiktok","ES"),
+  I("The Hardest Part of Being First-Gen Isn't the Money","representation","storytime","tiktok","ES"),
+  I("Translating Documents for My Parents at Age 10","representation","storytime","tiktok","ES"),
+  I("Feeling Caught Between Two Cultures","representation","storytime","tiktok","ES"),
+  I("Being the First — and Opening the Door for Others","representation","storytime","tiktok","ES"),
+  I("Things I'm Not Ashamed of as an Ecuadorian","representation","storytime","tiktok","ES"),
+  I("On the 'Sense of Inferiority' Many of Us Grow Up With","representation","storytime","tiktok","ES"),
+  I("Inspiration for the Next Generation of Latino Kids","representation","teaching","instagram","ES"),
+  I("Behind 'The Girl Who Made It' Are Parents Who Went Without","representation","storytime","tiktok","ES"),
+
+  // ---------------- MONEY & FINANCIAL LITERACY ----------------
+  I("Saving vs Investing — What's the Difference","money","teaching","tiktok","ES"),
+  I("What Is an ISA and Why Nobody Told You About It","money","teaching","tiktok","EN"),
+  I("How to Avoid Bad Debt","money","teaching","tiktok","ES"),
+  I("The 50/30/20 Rule, Adapted for Immigrants","money","teaching","tiktok","ES"),
+  I("How to Send Money Home Without Wrecking Your Own Goals","money","teaching","tiktok","ES"),
+  I("How to Start Investing With £100 a Month","money","teaching","tiktok","EN"),
+  I("What Is an Index Fund","money","teaching","tiktok","EN"),
+  I("Why Saving Alone Won't Make You Rich","money","teaching","tiktok","EN"),
+  I("Compound Interest, Explained Simply","money","teaching","tiktok","EN"),
+  I("How to Build Credit in the UK","money","teaching","tiktok","EN"),
+  I("Financial Mistakes Immigrants Commonly Make","money","teaching","tiktok","ES"),
+  I("How a Credit Card Actually Works","money","teaching","tiktok","EN"),
+  I("What Is an ETF","money","teaching","tiktok","EN"),
+  I("How to Start Investing With Just £50","money","teaching","tiktok","EN"),
+  I("Financial Mistakes I Made in My 20s","money","storytime","tiktok","ES"),
+  I("Why You Need an Emergency Fund","money","teaching","tiktok","EN"),
+  I("What 'Making Your Money Work for You' Actually Means","money","teaching","tiktok","EN"),
+  I("Sort Out Your Finances Before Year End","money","teaching","tiktok","EN"),
+  I("Build a Budget for Next Year (Template Walkthrough)","money","demo","tiktok","EN"),
+  I("Start Investing in the Stock Market — S&P 500 Explained Simply","money","teaching","tiktok","EN"),
+  I("My Routine Every Time I Get Paid","money","vlog","tiktok","EN"),
+
+  // ---------------- ORINTI (FOUNDER) ----------------
+  I("I Launched My Agency After Leaving a £96k Salary","orinti","storytime","linkedin","EN"),
+  I("What Entrepreneurship Actually Looks Like","orinti","teaching","linkedin","EN"),
+  I("How to Get Your First Clients","orinti","teaching","linkedin","EN"),
+  I("How to Build a Personal Brand","orinti","teaching","linkedin","EN"),
+  I("Why Most Entrepreneurs Fail","orinti","teaching","linkedin","EN"),
+  I("You Don't Need Thousands to Start","orinti","teaching","linkedin","EN"),
+  I("How to Validate a Business Idea in 7 Days","orinti","teaching","linkedin","EN"),
+  I("Get Your First Client Before You Have a Company","orinti","teaching","linkedin","EN"),
+  I("Why I Left My Corporate Job","orinti","storytime","linkedin","EN"),
+  I("How to Sell Without Feeling Like a 'Salesperson'","orinti","teaching","linkedin","EN"),
+  I("Building a Personal Brand From Zero","orinti","teaching","linkedin","EN"),
+  I("The Real Numbers Behind My Business","orinti","founder","linkedin","EN"),
+  I("How I Landed My First Client","orinti","storytime","linkedin","EN"),
+  I("When NOT to Quit Your Job","orinti","teaching","linkedin","EN"),
+  I("The Truth About Starting a Business in London","orinti","storytime","linkedin","EN"),
+  I("How I Price My Services","orinti","teaching","linkedin","EN"),
+  I("The First £1,000 of a Business","orinti","founder","linkedin","EN"),
+  I("Behind the Pitch: Landing Akin Cosmetics as a Client","orinti","founder","linkedin","EN"),
+  I("My First 90 Days as a Founder","orinti","founder","linkedin","EN"),
+
+  // ---------------- EMPOWER LATAM UK ----------------
+  I("Why I Started Empower LATAM UK","eluk","storytime","instagram","ES"),
+  I("A Mentee's Story — Where She Started and Where She Is Now","eluk","storytime","instagram","ES"),
+  I("Behind the Scenes of Our LAMP/LACAP Mentorship Programme","eluk","vlog","instagram","ES"),
+  I("Event Recap: Our Latest Corporate Partnership","eluk","vlog","instagram","EN"),
+  I("Speaking on a Panel at the UN — What It Means for Our Community","eluk","storytime","linkedin","EN"),
+  I("Why Latin American Representation in the UK Matters","eluk","teaching","instagram","ES"),
+  I("How You Can Get Involved With Empower LATAM UK","eluk","teaching","instagram","ES"),
+  I("This Year's Impact Numbers — How Many People We've Supported","eluk","founder","instagram","EN"),
+];
+
+/* ============================= STATE ============================= */
+const STORAGE_KEY = 'contentEcosystemCalendar.v1';
+
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function toISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function fromISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function todayISO(){ return toISO(new Date()); }
+function mondayOf(iso){
+  const d = fromISO(iso);
+  const dow = d.getDay(); // 0=Sun..6=Sat
+  const diff = (dow===0? -6 : 1-dow);
+  d.setDate(d.getDate()+diff);
+  return toISO(d);
+}
+function addDays(iso,n){ const d=fromISO(iso); d.setDate(d.getDate()+n); return toISO(d); }
+function fmtDay(iso){ return fromISO(iso).toLocaleDateString('en-GB',{ day:'numeric', month:'short' }); }
+function fmtRange(startIso){
+  const end = addDays(startIso,6);
+  const s = fromISO(startIso), e = fromISO(end);
+  const sameMonth = s.getMonth()===e.getMonth() && s.getFullYear()===e.getFullYear();
+  const opts1 = sameMonth? {day:'numeric'} : {day:'numeric',month:'short'};
+  return s.toLocaleDateString('en-GB',opts1) + ' – ' + e.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function defaultState(){
+  return {
+    ideas: SEED_IDEAS.map(x=>({...x})),
+    view: 'dashboard',
+    weekStart: mondayOf(todayISO()),
+    filters: { pillar:'', objective:'', platform:'', format:'', status:'', language:'', unscheduledOnly:false, q:'' },
+  };
+}
+
+let state;
+try{
+  const raw = localStorage.getItem(STORAGE_KEY);
+  state = raw ? JSON.parse(raw) : defaultState();
+  if(!state.ideas || !state.ideas.length) state = defaultState();
+} catch(e){ state = defaultState(); }
+
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+function newId(){ return 'u-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7); }
+
+function esc(str){
+  return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============================= TOAST ============================= */
+let toastTimer=null;
+function toast(msg){
+  const root = document.getElementById('toast-root');
+  root.innerHTML = '<div class="toast">'+esc(msg)+'</div>';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ root.innerHTML=''; }, 2200);
+}
+
+/* ============================= PILL HELPERS ============================= */
+function pillarPill(pillarId){
+  const p = PILLAR_MAP[pillarId];
+  return '<span class="pill" style="background:var(--p-'+pillarId+'-tint); color:var(--p-'+pillarId+')">'
+       + '<span class="dot" style="background:var(--p-'+pillarId+')"></span>'+esc(p.label)+'</span>';
+}
+function objectivePill(objId){
+  const o = OBJECTIVE_MAP[objId];
+  return '<span class="pill" style="background:var(--accent-tint); color:var(--ink-2)">'
+       + '<span class="dot" style="background:var('+o.colorVar+')"></span>'+esc(o.short)+'</span>';
+}
+function outlinePill(label){ return '<span class="pill pill-outline">'+esc(label)+'</span>'; }
+
+/* ============================= NAV ============================= */
+function renderNav(){
+  document.querySelectorAll('.nav-tab').forEach(btn=>{
+    btn.setAttribute('aria-current', btn.dataset.view===state.view ? 'true':'false');
+  });
+  document.getElementById('nav-count-dashboard').textContent = '';
+  document.getElementById('nav-count-calendar').textContent = countScheduledThisWeek();
+  document.getElementById('nav-count-bank').textContent = state.ideas.length;
+}
+function countScheduledThisWeek(){
+  const start=state.weekStart, end=addDays(start,6);
+  return state.ideas.filter(i=>i.date && i.date>=start && i.date<=end).length;
+}
+
+document.querySelectorAll('.nav-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{ state.view = btn.dataset.view; save(); render(); });
+});
+
+/* ============================= DASHBOARD ============================= */
+function computeBalance(ideas){
+  const counts = { growth:0, eluk:0, orinti:0 };
+  ideas.forEach(i=>{ counts[PILLAR_OBJECTIVE[i.pillar]]++; });
+  const total = ideas.length || 1;
+  return OBJECTIVES.map(o=>({ ...o, count:counts[o.id], pct: Math.round((counts[o.id]/total)*100) }));
+}
+
+function renderDashboard(){
+  const monthPrefix = todayISO().slice(0,7);
+  const monthIdeas = state.ideas.filter(i=>i.date && i.date.startsWith(monthPrefix));
+  const scheduledThisMonth = monthIdeas.length;
+  const postedThisMonth = monthIdeas.filter(i=>i.status==='posted').length;
+  const backlogCount = state.ideas.filter(i=>!i.date).length;
+  const scheduledWeek = state.ideas.filter(i=>i.date && i.date>=state.weekStart && i.date<=addDays(state.weekStart,6));
+
+  const balanceSource = monthIdeas.length ? monthIdeas : scheduledWeek;
+  const balance = computeBalance(balanceSource.length ? balanceSource : []);
+  const hasBalanceData = balanceSource.length>0;
+
+  const weeklyCheck = WEEKLY_MINIMUMS.map(w=>{
+    const met = scheduledWeek.some(i=>i.format===w.format);
+    return { ...w, met };
+  });
+
+  document.getElementById('main').innerHTML = `
+    <div class="page-head">
+      <div class="eyebrow">Dashboard</div>
+      <h2>La generación que rompe el ciclo</h2>
+      <p>One story, three engines: personal-brand content builds trust, Empower LATAM UK turns it into community, Orinti turns it into clients.</p>
+    </div>
+
+    <div class="grid stat-row">
+      <div class="card stat-tile"><div class="label">Ideas in bank</div><div class="value">${state.ideas.length}</div><div class="sub">${backlogCount} unscheduled</div></div>
+      <div class="card stat-tile"><div class="label">Scheduled this week</div><div class="value">${scheduledWeek.length}</div><div class="sub">${fmtRange(state.weekStart)}</div></div>
+      <div class="card stat-tile"><div class="label">Scheduled this month</div><div class="value">${scheduledThisMonth}</div><div class="sub">${postedThisMonth} marked posted</div></div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:1.3fr 1fr; align-items:start;">
+      <div class="card">
+        <div class="section-title">Objective balance ${hasBalanceData? '· '+(monthIdeas.length? 'this month':'this week') : ''}</div>
+        ${hasBalanceData ? renderBalanceChart(balance) : '<p style="color:var(--ink-muted); font-size:13px;">Schedule a few ideas onto the calendar to see how your content mix compares to the 55 / 25 / 20 target.</p>'}
+      </div>
+      <div class="card">
+        <div class="section-title">This week's minimum — ${fmtRange(state.weekStart)}</div>
+        <div class="checklist">
+          ${weeklyCheck.map(w=>`
+            <div class="check-item ${w.met?'met':'unmet'}">
+              <div class="dot">${w.met?'✓':'!'}</div>
+              <div class="txt"><b>${esc(w.label)}</b><br><span>${w.met? 'scheduled this week' : 'not scheduled yet'}</span></div>
+            </div>`).join('')}
+        </div>
+        <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="goto-calendar">Open this week →</button></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="section-title">Pillars</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        ${PILLARS.map(p=>pillarPill(p.id)).join('')}
+      </div>
+    </div>
+  `;
+
+  document.querySelector('[data-action="goto-calendar"]')?.addEventListener('click', ()=>{ state.view='calendar'; save(); render(); });
+}
+
+function renderBalanceChart(balance){
+  const segs = balance.map(o=>`<div class="balance-seg" style="width:${o.pct}%; background:var(${o.colorVar})" title="${esc(o.short)}: ${o.pct}%"></div>`).join('');
+  const ticks = balance.map(o=>{
+    // cumulative target position for tick placement, approximate using own target midpoint isn't exact stacked-target;
+    return '';
+  }).join('');
+  const legend = balance.map(o=>`<div class="item"><span class="swatch" style="background:var(${o.colorVar})"></span>${esc(o.short)} — ${o.pct}% <span style="color:var(--ink-muted)">(target ${o.target}%)</span></div>`).join('');
+  const rows = balance.map(o=>{
+    const delta = o.pct - o.target;
+    let chip;
+    if(Math.abs(delta)<=6) chip = '<span class="status-chip good">On track</span>';
+    else if(delta>6) chip = '<span class="status-chip warning">'+ (o.id==='orinti'?'Over-indexed':'Above target') +'</span>';
+    else chip = '<span class="status-chip critical">Under-represented</span>';
+    return `<div class="balance-row">
+      <div class="name"><span class="swatch" style="background:var(${o.colorVar})"></span>${esc(o.label)}</div>
+      <div class="pct">${o.pct}%</div>
+      ${chip}
+    </div>`;
+  }).join('');
+  return `
+    <div class="balance-legend">${legend}</div>
+    <div class="balance-track">${segs}</div>
+    <div class="balance-readout">${rows}</div>
+  `;
+}
+
+/* ============================= CALENDAR ============================= */
+function renderCalendar(){
+  const days = [0,1,2,3,4,5,6].map(n=>addDays(state.weekStart,n));
+  const dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const scheduledWeek = state.ideas.filter(i=>i.date && i.date>=state.weekStart && i.date<=addDays(state.weekStart,6));
+  const balance = computeBalance(scheduledWeek);
+  const weeklyCheck = WEEKLY_MINIMUMS.map(w=>({...w, met: scheduledWeek.some(i=>i.format===w.format)}));
+
+  document.getElementById('main').innerHTML = `
+    <div class="page-head">
+      <div class="eyebrow">Calendar</div>
+      <h2>Week planner</h2>
+      <p>Click a day to schedule an idea from your bank, or write a new one on the spot.</p>
+    </div>
+    <div class="cal-toolbar">
+      <button class="btn" id="cal-prev">← Prev week</button>
+      <button class="btn" id="cal-today">Today</button>
+      <button class="btn" id="cal-next">Next week →</button>
+      <div class="range">${fmtRange(state.weekStart)}</div>
+    </div>
+    <div class="cal-grid">
+      ${days.map((iso,idx)=>renderDayCard(iso, dowLabels[idx])).join('')}
+    </div>
+    <div class="card" style="margin-top:18px;">
+      <div class="section-title">This week's balance</div>
+      ${scheduledWeek.length? renderBalanceChart(balance) : '<p style="color:var(--ink-muted); font-size:13px;">Nothing scheduled this week yet.</p>'}
+      <div class="checklist" style="margin-top:14px;">
+        ${weeklyCheck.map(w=>`<div class="check-item ${w.met?'met':'unmet'}"><div class="dot">${w.met?'✓':'!'}</div><div class="txt"><b>${esc(w.label)}</b></div></div>`).join('')}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('cal-prev').addEventListener('click', ()=>{ state.weekStart=addDays(state.weekStart,-7); save(); render(); });
+  document.getElementById('cal-next').addEventListener('click', ()=>{ state.weekStart=addDays(state.weekStart,7); save(); render(); });
+  document.getElementById('cal-today').addEventListener('click', ()=>{ state.weekStart=mondayOf(todayISO()); save(); render(); });
+
+  document.querySelectorAll('.idea-chip').forEach(el=>{
+    el.addEventListener('click', ()=> openIdeaModal(el.dataset.id));
+  });
+  document.querySelectorAll('.day-add[data-mode="new"]').forEach(el=>{
+    el.addEventListener('click', ()=> openIdeaModal(null, el.dataset.date));
+  });
+  document.querySelectorAll('.day-add[data-mode="pick"]').forEach(el=>{
+    el.addEventListener('click', ()=> openPickerModal(el.dataset.date));
+  });
+}
+
+function renderDayCard(iso, dow){
+  const items = state.ideas.filter(i=>i.date===iso);
+  const isToday = iso===todayISO();
+  return `
+    <div class="day-card ${isToday?'today':''}">
+      <div class="day-head"><span class="dow">${dow}</span><span class="dnum">${fmtDay(iso)}</span></div>
+      <div class="day-items">
+        ${items.length ? items.map(i=>`
+          <div class="idea-chip" data-id="${i.id}" style="--chip-color:var(--p-${i.pillar})">
+            <span class="t">${esc(i.title)}</span>
+            <span class="meta">${esc(FORMAT_MAP[i.format].label)} · ${esc(PLATFORM_MAP[i.platform].label)}</span>
+          </div>`).join('') : '<div class="day-empty">Nothing yet</div>'}
+      </div>
+      <button class="day-add" data-mode="pick" data-date="${iso}">+ From idea bank</button>
+      <button class="day-add" data-mode="new" data-date="${iso}">+ New idea</button>
+    </div>
+  `;
+}
+
+/* ============================= IDEA BANK ============================= */
+function matchesFilters(i){
+  const f = state.filters;
+  if(f.pillar && i.pillar!==f.pillar) return false;
+  if(f.objective && PILLAR_OBJECTIVE[i.pillar]!==f.objective) return false;
+  if(f.platform && i.platform!==f.platform) return false;
+  if(f.format && i.format!==f.format) return false;
+  if(f.status && i.status!==f.status) return false;
+  if(f.language && i.language!==f.language) return false;
+  if(f.unscheduledOnly && i.date) return false;
+  if(f.q && !i.title.toLowerCase().includes(f.q.toLowerCase())) return false;
+  return true;
+}
+
+function renderBank(){
+  const filtered = state.ideas.filter(matchesFilters);
+  document.getElementById('main').innerHTML = `
+    <div class="page-head">
+      <div class="eyebrow">Idea Bank</div>
+      <h2>Every idea you've ever had</h2>
+      <p>${state.ideas.length} ideas across 8 pillars. Filter, schedule, or add something new.</p>
+    </div>
+
+    <div class="filter-bar">
+      <input type="search" id="f-q" placeholder="Search titles…" value="${esc(state.filters.q)}" style="min-width:200px;">
+      ${select('f-pillar','',[['','All pillars'],...PILLARS.map(p=>[p.id,p.label])],state.filters.pillar)}
+      ${select('f-objective','',[['','All objectives'],...OBJECTIVES.map(o=>[o.id,o.short])],state.filters.objective)}
+      ${select('f-platform','',[['','All platforms'],...PLATFORMS.map(p=>[p.id,p.label])],state.filters.platform)}
+      ${select('f-format','',[['','All formats'],...FORMATS.map(f=>[f.id,f.label])],state.filters.format)}
+      ${select('f-status','',[['','All statuses'],...STATUSES.map(s=>[s.id,s.label])],state.filters.status)}
+      ${select('f-language','',[['','All languages'],...LANGS.map(l=>[l.id,l.label])],state.filters.language)}
+      <label style="display:flex; align-items:center; gap:6px; font-weight:600; color:var(--ink-2); font-size:13px;">
+        <input type="checkbox" id="f-unscheduled" ${state.filters.unscheduledOnly?'checked':''}> Unscheduled only
+      </label>
+      <button class="btn btn-ghost" id="f-clear">Clear filters</button>
+      <button class="btn btn-primary" id="btn-new-idea" style="margin-left:auto;">+ New idea</button>
+    </div>
+
+    <div class="idea-list">
+      ${filtered.length ? filtered.map(rowTemplate).join('') : '<div class="empty-state">No ideas match these filters.</div>'}
+    </div>
+  `;
+
+  document.getElementById('f-q').addEventListener('input', e=>{ state.filters.q=e.target.value; save(); renderBank(); });
+  document.getElementById('f-pillar').addEventListener('change', e=>{ state.filters.pillar=e.target.value; save(); renderBank(); });
+  document.getElementById('f-objective').addEventListener('change', e=>{ state.filters.objective=e.target.value; save(); renderBank(); });
+  document.getElementById('f-platform').addEventListener('change', e=>{ state.filters.platform=e.target.value; save(); renderBank(); });
+  document.getElementById('f-format').addEventListener('change', e=>{ state.filters.format=e.target.value; save(); renderBank(); });
+  document.getElementById('f-status').addEventListener('change', e=>{ state.filters.status=e.target.value; save(); renderBank(); });
+  document.getElementById('f-language').addEventListener('change', e=>{ state.filters.language=e.target.value; save(); renderBank(); });
+  document.getElementById('f-unscheduled').addEventListener('change', e=>{ state.filters.unscheduledOnly=e.target.checked; save(); renderBank(); });
+  document.getElementById('f-clear').addEventListener('click', ()=>{ state.filters={pillar:'',objective:'',platform:'',format:'',status:'',language:'',unscheduledOnly:false,q:''}; save(); renderBank(); });
+  document.getElementById('btn-new-idea').addEventListener('click', ()=> openIdeaModal(null));
+
+  document.querySelectorAll('[data-edit]').forEach(el=> el.addEventListener('click', ()=> openIdeaModal(el.dataset.edit)));
+  document.querySelectorAll('[data-del]').forEach(el=> el.addEventListener('click', ()=>{
+    if(confirm('Delete this idea?')){ state.ideas = state.ideas.filter(i=>i.id!==el.dataset.del); save(); renderBank(); toast('Idea deleted'); }
+  }));
+  document.querySelectorAll('[data-unschedule]').forEach(el=> el.addEventListener('click', ()=>{
+    const idea = state.ideas.find(i=>i.id===el.dataset.unschedule); if(idea){ idea.date=null; save(); renderBank(); }
+  }));
+}
+
+function select(id,label,options,value){
+  return `<select id="${id}">${options.map(([v,l])=>`<option value="${esc(v)}" ${v===value?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
+}
+
+function rowTemplate(i){
+  const p = PILLAR_MAP[i.pillar];
+  return `
+    <div class="idea-row">
+      <div class="main">
+        <div class="title">${esc(i.title)}</div>
+        <div class="tags">
+          ${pillarPill(i.pillar)}
+          ${objectivePill(PILLAR_OBJECTIVE[i.pillar])}
+          ${outlinePill(FORMAT_MAP[i.format].label)}
+          ${outlinePill(PLATFORM_MAP[i.platform].label)}
+          ${outlinePill(i.language)}
+          ${outlinePill(STATUS_MAP[i.status].label)}
+          ${i.date ? outlinePill('📅 '+fmtDay(i.date)) : ''}
+        </div>
+      </div>
+      <div class="actions">
+        ${i.date ? `<button class="btn btn-sm" data-unschedule="${i.id}">Unschedule</button>` : ''}
+        <button class="btn btn-sm" data-edit="${i.id}">Edit / Schedule</button>
+        <button class="btn btn-sm btn-danger" data-del="${i.id}">Delete</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================= MODALS ============================= */
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+
+function openIdeaModal(id, presetDate){
+  const editing = !!id;
+  const idea = editing ? state.ideas.find(i=>i.id===id) : {
+    id:null, title:'', pillar:'career', format:'teaching', platform:'tiktok',
+    language:'ES', status:'idea', date: presetDate||null, notes:''
+  };
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `
+    <div class="overlay" id="modal-overlay">
+      <div class="modal" role="dialog" aria-modal="true">
+        <h3>${editing? 'Edit idea' : 'New idea'}</h3>
+        <div class="field" style="margin-bottom:14px;">
+          <label for="m-title">Title</label>
+          <input id="m-title" type="text" value="${esc(idea.title)}" placeholder="e.g. How to Build Credit in the UK">
+        </div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;">
+          <div class="field"><label for="m-pillar">Pillar</label>${select('m-pillar','',PILLARS.map(p=>[p.id,p.label]),idea.pillar)}</div>
+          <div class="field"><label for="m-format">Format</label>${select('m-format','',FORMATS.map(f=>[f.id,f.label]),idea.format)}</div>
+          <div class="field"><label for="m-platform">Platform</label>${select('m-platform','',PLATFORMS.map(p=>[p.id,p.label]),idea.platform)}</div>
+          <div class="field"><label for="m-language">Language</label>${select('m-language','',LANGS.map(l=>[l.id,l.label]),idea.language)}</div>
+          <div class="field"><label for="m-status">Status</label>${select('m-status','',STATUSES.map(s=>[s.id,s.label]),idea.status)}</div>
+          <div class="field"><label for="m-date">Scheduled date</label><input id="m-date" type="date" value="${idea.date||''}"></div>
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label for="m-notes">Notes</label>
+          <textarea id="m-notes" placeholder="Talking points, hook, references…">${esc(idea.notes||'')}</textarea>
+        </div>
+        <div class="modal-foot">
+          <div>${editing? `<button class="btn btn-danger" id="m-delete">Delete</button>` : ''}</div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn" id="m-cancel">Cancel</button>
+            <button class="btn btn-primary" id="m-save">${editing?'Save changes':'Add to bank'}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-overlay').addEventListener('click', e=>{ if(e.target.id==='modal-overlay') closeModal(); });
+  document.getElementById('m-cancel').addEventListener('click', closeModal);
+  document.getElementById('m-delete')?.addEventListener('click', ()=>{
+    if(confirm('Delete this idea?')){ state.ideas = state.ideas.filter(i=>i.id!==idea.id); save(); closeModal(); render(); toast('Idea deleted'); }
+  });
+  document.getElementById('m-save').addEventListener('click', ()=>{
+    const title = document.getElementById('m-title').value.trim();
+    if(!title){ toast('Give it a title first'); return; }
+    const payload = {
+      title,
+      pillar: document.getElementById('m-pillar').value,
+      format: document.getElementById('m-format').value,
+      platform: document.getElementById('m-platform').value,
+      language: document.getElementById('m-language').value,
+      status: document.getElementById('m-status').value,
+      date: document.getElementById('m-date').value || null,
+      notes: document.getElementById('m-notes').value,
+    };
+    if(editing){
+      Object.assign(idea, payload);
+      toast('Saved');
+    } else {
+      state.ideas.push({ id:newId(), ...payload });
+      toast('Added to bank');
+    }
+    save(); closeModal(); render();
+  });
+}
+
+function openPickerModal(dateIso){
+  const backlog = state.ideas.filter(i=>!i.date);
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `
+    <div class="overlay" id="modal-overlay">
+      <div class="modal" role="dialog" aria-modal="true">
+        <h3>Schedule for ${esc(fmtDay(dateIso))}</h3>
+        <input type="search" id="pick-q" placeholder="Search unscheduled ideas…" style="width:100%;">
+        <div class="picker-list" id="pick-list"></div>
+        <div class="modal-foot">
+          <span></span>
+          <button class="btn" id="pick-cancel">Close</button>
+        </div>
+      </div>
+    </div>
+  `;
+  function renderList(q){
+    const list = backlog.filter(i=> i.title.toLowerCase().includes((q||'').toLowerCase()));
+    document.getElementById('pick-list').innerHTML = list.length ? list.map(i=>`
+      <div class="picker-row" data-pick="${i.id}">
+        <span>${esc(i.title)}</span>
+        ${pillarPill(i.pillar)}
+      </div>`).join('') : '<div class="empty-state" style="padding:20px;">No unscheduled ideas match. Try a new idea instead.</div>';
+    document.querySelectorAll('[data-pick]').forEach(el=> el.addEventListener('click', ()=>{
+      const idea = state.ideas.find(i=>i.id===el.dataset.pick);
+      idea.date = dateIso; save(); closeModal(); render(); toast('Scheduled');
+    }));
+  }
+  renderList('');
+  document.getElementById('pick-q').addEventListener('input', e=> renderList(e.target.value));
+  document.getElementById('modal-overlay').addEventListener('click', e=>{ if(e.target.id==='modal-overlay') closeModal(); });
+  document.getElementById('pick-cancel').addEventListener('click', closeModal);
+}
+
+/* ============================= EXPORT / IMPORT / RESET ============================= */
+function download(filename, content, mime){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('btn-export').addEventListener('click', ()=>{
+  download('content-ecosystem-calendar.json', JSON.stringify(state.ideas, null, 2), 'application/json');
+});
+document.getElementById('btn-export-csv').addEventListener('click', ()=>{
+  const cols = ['Title','Pillar','Objective','Platform','Format','Language','Status','Date','Notes'];
+  const rows = state.ideas.map(i=>[
+    i.title, PILLAR_MAP[i.pillar].label, OBJECTIVE_MAP[PILLAR_OBJECTIVE[i.pillar]].short,
+    PLATFORM_MAP[i.platform].label, FORMAT_MAP[i.format].label, i.language,
+    STATUS_MAP[i.status].label, i.date||'', i.notes||''
+  ]);
+  const csv = [cols, ...rows].map(r=> r.map(v=>{
+    const s = String(v==null?'':v).replace(/"/g,'""');
+    return /[",\n]/.test(s) ? '"'+s+'"' : s;
+  }).join(',')).join('\n');
+  download('content-ecosystem-calendar.csv', csv, 'text/csv');
+});
+document.getElementById('btn-import').addEventListener('click', ()=> document.getElementById('file-import').click());
+document.getElementById('file-import').addEventListener('change', (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(!Array.isArray(data)) throw new Error('bad format');
+      state.ideas = data;
+      save(); render(); toast('Imported '+data.length+' ideas');
+    }catch(err){ toast('Could not read that file'); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+});
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  if(confirm('Replace ALL current ideas with the starter content bank? This cannot be undone.')){
+    state = defaultState();
+    save(); render(); toast('Reset to starter ideas');
+  }
+});
+
+/* ============================= RENDER DISPATCH ============================= */
+function render(){
+  renderNav();
+  if(state.view==='calendar') renderCalendar();
+  else if(state.view==='bank') renderBank();
+  else renderDashboard();
+}
+render();
+</script>

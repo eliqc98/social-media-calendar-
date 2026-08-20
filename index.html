@@ -25,7 +25,7 @@
     --obj-growth:#2a78d6; --obj-orinti:#eb6834; --obj-eluk:#1baf7a;
 
     /* single-hue ordinal ramp for the per-platform chart — always paired with a text label */
-    --plat-tiktok:#3f2a1c; --plat-reels:#6B4A33; --plat-instagram:#9c7350; --plat-linkedin:#c9a06c;
+    --plat-tiktok:#3f2a1c; --plat-instagram:#835a3a; --plat-linkedin:#c9a06c;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -48,7 +48,7 @@
 
       --obj-growth:#3987e5; --obj-orinti:#d95926; --obj-eluk:#199e70;
 
-      --plat-tiktok:#6b4f2e; --plat-reels:#8f6c40; --plat-instagram:#b98f5c; --plat-linkedin:#d9b483;
+      --plat-tiktok:#6b4f2e; --plat-instagram:#a37f4e; --plat-linkedin:#d9b483;
     }
   }
   :root[data-theme="dark"]{
@@ -71,7 +71,7 @@
 
     --obj-growth:#3987e5; --obj-orinti:#d95926; --obj-eluk:#199e70;
 
-    --plat-tiktok:#6b4f2e; --plat-reels:#8f6c40; --plat-instagram:#b98f5c; --plat-linkedin:#d9b483;
+    --plat-tiktok:#6b4f2e; --plat-instagram:#a37f4e; --plat-linkedin:#d9b483;
   }
 
   *{box-sizing:border-box;}
@@ -147,6 +147,15 @@
   .status-chip.good{ background:var(--good-tint); color:var(--good); }
   .status-chip.warning{ background:var(--warning-tint); color:var(--warning); }
   .status-chip.critical{ background:var(--critical-tint); color:var(--critical); }
+
+  /* independent per-platform bars — shares can exceed 100% combined since a
+     cross-posted idea counts toward more than one platform */
+  .plat-bars{ display:grid; gap:14px; }
+  .plat-row-head{ display:flex; align-items:center; justify-content:space-between; font-size:13.5px; margin-bottom:6px; }
+  .plat-row-head .name{ display:flex; align-items:center; gap:7px; color:var(--ink-2); font-weight:600; }
+  .plat-row-head .plat-stats{ display:flex; align-items:center; gap:8px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+  .plat-track{ height:10px; border-radius:999px; background:var(--gridline); overflow:hidden; }
+  .plat-fill{ height:100%; border-radius:999px; }
 
   .channel-block + .channel-block{ margin-top:18px; padding-top:16px; border-top:1px solid var(--gridline); }
   .channel-head{ display:flex; align-items:baseline; justify-content:space-between; font-size:14px; }
@@ -227,6 +236,15 @@
   label{ font-size:12px; font-weight:700; color:var(--ink-2); display:block; margin-bottom:5px; }
   .field{ display:flex; flex-direction:column; }
   .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .check-inline{ display:flex; flex-wrap:wrap; gap:8px; }
+  .check-pill{
+    display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600;
+    padding:7px 11px; border:1px solid var(--border); border-radius:8px; cursor:pointer;
+    color:var(--ink-2); background:var(--surface-raised); margin:0;
+  }
+  .check-pill:has(input:checked){ background:var(--accent-tint); border-color:var(--accent); color:var(--ink); }
+  .check-pill input{ margin:0; accent-color:var(--accent); }
+  .check-pill:has(input:disabled){ opacity:.7; cursor:not-allowed; }
 
   /* --- modal --- */
   .overlay{ position:fixed; inset:0; background:rgba(11,11,11,.45); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50; }
@@ -300,17 +318,27 @@ const OBJECTIVE_MAP = Object.fromEntries(OBJECTIVES.map(o=>[o.id,o]));
 
 const PLATFORMS = [
   { id:'tiktok',    label:'TikTok' },
-  { id:'reels',     label:'IG Reels' },
-  { id:'instagram', label:'IG Feed/Carousel' },
+  { id:'instagram', label:'IG Reels/Carousel' },
   { id:'linkedin',  label:'LinkedIn' },
 ];
 const PLATFORM_MAP = Object.fromEntries(PLATFORMS.map(p=>[p.id,p]));
+function platformLabels(idea){ return idea.platforms.map(p=>PLATFORM_MAP[p].label).join(' + '); }
+
+// A post can go out on more than one platform at once. Business rule:
+// everything posted to Instagram is cross-posted to TikTok too, so
+// checking Instagram always implies TikTok. Every write path funnels
+// through this so the rule can't be bypassed by editing one field.
+function normalizePlatforms(list){
+  const set = new Set((list && list.length ? list : ['tiktok']));
+  if(set.has('instagram')) set.add('tiktok');
+  return PLATFORMS.map(p=>p.id).filter(id=>set.has(id));
+}
 
 // Channels group platforms for weekly-plan purposes: Instagram + TikTok are
 // planned as one cross-posted educational slate; LinkedIn is planned on its own.
 const CHANNELS = {
   linkedin: { id:'linkedin', label:'LinkedIn', sub:'3 posts/week — 2 Orinti + 1 social impact', platforms:['linkedin'] },
-  social:   { id:'social',   label:'Instagram + TikTok', sub:'3 posts/week, cross-posted — all educational', platforms:['tiktok','reels','instagram'] },
+  social:   { id:'social',   label:'Instagram + TikTok', sub:'3 posts/week, cross-posted — all educational', platforms:['tiktok','instagram'] },
 };
 
 const FORMATS = [
@@ -357,7 +385,7 @@ function I(title, pillar, format, platform, lang){
     id: 'seed-'+seedCounter,
     title, pillar,
     format: format || 'teaching',
-    platform: platform || 'tiktok',
+    platforms: normalizePlatforms([platform || 'tiktok']),
     language: lang || 'ES',
     status: 'idea',
     date: null,
@@ -581,11 +609,23 @@ function defaultState(){
   };
 }
 
+// Brings ideas saved by an older version of this app (single `platform`
+// string, or the now-retired 'reels' id) up to the current `platforms` array
+// shape, so a saved session never crashes on load after an update.
+function migrateIdea(idea){
+  let list = idea.platforms || (idea.platform ? [idea.platform] : ['tiktok']);
+  list = list.map(p=> p==='reels' ? 'instagram' : p);
+  idea.platforms = normalizePlatforms(list);
+  delete idea.platform;
+  return idea;
+}
+
 let state;
 try{
   const raw = localStorage.getItem(STORAGE_KEY);
   state = raw ? JSON.parse(raw) : defaultState();
   if(!state.ideas || !state.ideas.length) state = defaultState();
+  state.ideas = state.ideas.map(migrateIdea);
 } catch(e){ state = defaultState(); }
 
 function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -736,37 +776,35 @@ function renderBalanceChart(balance){
   `;
 }
 
+// A cross-posted idea counts toward every platform it's tagged with, so these
+// shares don't sum to 100% — each platform gets its own independent bar
+// (never a single stacked bar, which would only make sense for a whole).
 function computePlatformBalance(items){
   const total = items.length || 1;
   return PLATFORMS.map(p=>{
-    const count = items.filter(i=>i.platform===p.id).length;
+    const count = items.filter(i=>i.platforms.includes(p.id)).length;
     return { ...p, count, pct: Math.round((count/total)*100) };
   });
 }
 
 function renderPlatformBalanceChart(items){
   const balance = computePlatformBalance(items);
-  const present = balance.filter(p=>p.count>0);
-  const segs = present.map(p=>`<div class="balance-seg" style="width:${p.pct}%; background:var(--plat-${p.id})" title="${esc(p.label)}: ${p.count} post${p.count===1?'':'s'} (${p.pct}%)"></div>`).join('');
-  const legend = balance.map(p=>`<div class="item"><span class="swatch" style="background:var(--plat-${p.id})"></span>${esc(p.label)} — ${p.count}</div>`).join('');
   const rows = balance.map(p=>`
-    <div class="balance-row">
-      <div class="name"><span class="swatch" style="background:var(--plat-${p.id})"></span>${esc(p.label)}</div>
-      <div class="pct">${p.count} post${p.count===1?'':'s'}</div>
-      <span class="status-chip" style="background:var(--accent-tint); color:var(--ink-2);">${p.pct}%</span>
+    <div class="plat-row">
+      <div class="plat-row-head">
+        <span class="name"><span class="swatch" style="background:var(--plat-${p.id})"></span>${esc(p.label)}</span>
+        <span class="plat-stats">${p.count} post${p.count===1?'':'s'} <span class="status-chip" style="background:var(--accent-tint); color:var(--ink-2);">${p.pct}%</span></span>
+      </div>
+      <div class="plat-track"><div class="plat-fill" style="width:${p.pct}%; background:var(--plat-${p.id})"></div></div>
     </div>`).join('');
-  return `
-    <div class="balance-legend">${legend}</div>
-    <div class="balance-track">${segs}</div>
-    <div class="balance-readout">${rows}</div>
-  `;
+  return `<div class="plat-bars">${rows}</div>`;
 }
 
 function computeChannelPlan(scheduledWeek){
   return WEEKLY_PLAN.map(req=>{
     const platforms = CHANNELS[req.channel].platforms;
     const matches = scheduledWeek
-      .filter(i=> i.pillar===req.pillar && platforms.includes(i.platform))
+      .filter(i=> i.pillar===req.pillar && i.platforms.some(p=>platforms.includes(p)))
       .sort((a,b)=> a.date.localeCompare(b.date));
     return { ...req, got:matches.length, met: matches.length>=req.need, matches };
   });
@@ -865,7 +903,7 @@ function renderDayCard(iso, dow){
         ${items.length ? items.map(i=>`
           <div class="idea-chip" data-id="${i.id}" style="--chip-color:var(--p-${i.pillar})">
             <div class="idea-chip-top">
-              <span class="plat">${esc(PLATFORM_MAP[i.platform].label)}</span>
+              <span class="plat">${esc(platformLabels(i))}</span>
               <button class="chip-remove" data-unschedule-chip="${i.id}" title="Remove from ${esc(dow)} — back to bank" aria-label="Remove from this day">×</button>
             </div>
             <span class="t">${esc(i.title)}</span>
@@ -883,7 +921,7 @@ function matchesFilters(i){
   const f = state.filters;
   if(f.pillar && i.pillar!==f.pillar) return false;
   if(f.objective && PILLAR_OBJECTIVE[i.pillar]!==f.objective) return false;
-  if(f.platform && i.platform!==f.platform) return false;
+  if(f.platform && !i.platforms.includes(f.platform)) return false;
   if(f.format && i.format!==f.format) return false;
   if(f.status && i.status!==f.status) return false;
   if(f.language && i.language!==f.language) return false;
@@ -955,7 +993,7 @@ function rowTemplate(i){
           ${pillarPill(i.pillar)}
           ${objectivePill(PILLAR_OBJECTIVE[i.pillar])}
           ${outlinePill(FORMAT_MAP[i.format].label)}
-          ${outlinePill(PLATFORM_MAP[i.platform].label)}
+          ${i.platforms.map(p=>outlinePill(PLATFORM_MAP[p].label)).join('')}
           ${outlinePill(i.language)}
           ${outlinePill(STATUS_MAP[i.status].label)}
           ${i.date ? outlinePill('📅 '+fmtDay(i.date)) : ''}
@@ -976,7 +1014,7 @@ function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
 function openIdeaModal(id, presetDate){
   const editing = !!id;
   const idea = editing ? state.ideas.find(i=>i.id===id) : {
-    id:null, title:'', pillar:'career', format:'teaching', platform:'tiktok',
+    id:null, title:'', pillar:'career', format:'teaching', platforms:['tiktok'],
     language:'ES', status:'idea', date: presetDate||null, notes:''
   };
   const root = document.getElementById('modal-root');
@@ -991,9 +1029,19 @@ function openIdeaModal(id, presetDate){
         <div class="grid" style="grid-template-columns:1fr 1fr;">
           <div class="field"><label for="m-pillar">Pillar</label>${select('m-pillar','',PILLARS.map(p=>[p.id,p.label]),idea.pillar)}</div>
           <div class="field"><label for="m-format">Format</label>${select('m-format','',FORMATS.map(f=>[f.id,f.label]),idea.format)}</div>
-          <div class="field"><label for="m-platform">Platform</label>${select('m-platform','',PLATFORMS.map(p=>[p.id,p.label]),idea.platform)}</div>
           <div class="field"><label for="m-language">Language</label>${select('m-language','',LANGS.map(l=>[l.id,l.label]),idea.language)}</div>
           <div class="field"><label for="m-status">Status</label>${select('m-status','',STATUSES.map(s=>[s.id,s.label]),idea.status)}</div>
+          <div class="field" style="grid-column:1/-1;">
+            <label>Platforms</label>
+            <div class="check-inline">
+              ${PLATFORMS.map(p=>`
+                <label class="check-pill">
+                  <input type="checkbox" class="m-platform-cb" id="m-plat-${p.id}" value="${p.id}" ${idea.platforms.includes(p.id)?'checked':''}>
+                  ${esc(p.label)}
+                </label>`).join('')}
+            </div>
+            <p style="color:var(--ink-muted); font-size:11.5px; margin:6px 0 0;">Instagram always cross-posts to TikTok too.</p>
+          </div>
           <div class="field"><label for="m-date">Scheduled date</label><input id="m-date" type="date" value="${idea.date||''}"></div>
         </div>
         <div class="field" style="margin-top:14px;">
@@ -1015,6 +1063,15 @@ function openIdeaModal(id, presetDate){
   `;
   document.getElementById('modal-overlay').addEventListener('click', e=>{ if(e.target.id==='modal-overlay') closeModal(); });
   document.getElementById('m-cancel').addEventListener('click', closeModal);
+  // Instagram implies TikTok: lock TikTok checked+disabled while Instagram is checked.
+  const igCb = document.getElementById('m-plat-instagram');
+  const ttCb = document.getElementById('m-plat-tiktok');
+  const syncPlatformLock = ()=>{
+    if(igCb.checked){ ttCb.checked = true; ttCb.disabled = true; }
+    else { ttCb.disabled = false; }
+  };
+  syncPlatformLock();
+  igCb.addEventListener('change', syncPlatformLock);
   document.getElementById('m-delete')?.addEventListener('click', ()=>{
     if(confirm('Delete this idea?')){ state.ideas = state.ideas.filter(i=>i.id!==idea.id); save(); closeModal(); render(); toast('Idea deleted'); }
   });
@@ -1024,11 +1081,13 @@ function openIdeaModal(id, presetDate){
   document.getElementById('m-save').addEventListener('click', ()=>{
     const title = document.getElementById('m-title').value.trim();
     if(!title){ toast('Give it a title first'); return; }
+    const checkedPlatforms = Array.from(document.querySelectorAll('.m-platform-cb:checked')).map(cb=>cb.value);
+    if(!checkedPlatforms.length){ toast('Pick at least one platform'); return; }
     const payload = {
       title,
       pillar: document.getElementById('m-pillar').value,
       format: document.getElementById('m-format').value,
-      platform: document.getElementById('m-platform').value,
+      platforms: normalizePlatforms(checkedPlatforms),
       language: document.getElementById('m-language').value,
       status: document.getElementById('m-status').value,
       date: document.getElementById('m-date').value || null,
@@ -1111,7 +1170,7 @@ document.getElementById('btn-export-csv').addEventListener('click', ()=>{
   const cols = ['Title','Pillar','Objective','Platform','Format','Language','Status','Date','Notes'];
   const rows = state.ideas.map(i=>[
     i.title, PILLAR_MAP[i.pillar].label, OBJECTIVE_MAP[PILLAR_OBJECTIVE[i.pillar]].short,
-    PLATFORM_MAP[i.platform].label, FORMAT_MAP[i.format].label, i.language,
+    platformLabels(i), FORMAT_MAP[i.format].label, i.language,
     STATUS_MAP[i.status].label, i.date||'', i.notes||''
   ]);
   const csv = [cols, ...rows].map(r=> r.map(v=>{
@@ -1128,7 +1187,7 @@ document.getElementById('file-import').addEventListener('change', (e)=>{
     try{
       const data = JSON.parse(reader.result);
       if(!Array.isArray(data)) throw new Error('bad format');
-      state.ideas = data;
+      state.ideas = data.map(migrateIdea);
       save(); render(); toast('Imported '+data.length+' ideas');
     }catch(err){ toast('Could not read that file'); }
   };

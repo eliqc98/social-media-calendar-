@@ -157,6 +157,27 @@
   .plat-track{ height:10px; border-radius:999px; background:var(--gridline); overflow:hidden; }
   .plat-fill{ height:100%; border-radius:999px; }
 
+  /* --- production / batch prep --- */
+  .prep-channel{ margin-top:24px; }
+  .prep-channel:first-of-type{ margin-top:0; }
+  .prep-channel-title{ font-size:16px; margin-bottom:12px; }
+  .prep-slots{ display:grid; gap:14px; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); align-items:start; }
+  .prep-card{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .prep-card.empty{ border-style:dashed; justify-content:center; align-items:flex-start; min-height:120px; gap:10px; }
+  .prep-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .prep-meta{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .prep-slot-label{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; font-weight:700; color:var(--ink-muted); }
+  .prep-title-row{ display:flex; align-items:center; gap:8px; }
+  .prep-title-row .prep-title{ flex:1; font-size:14.5px; cursor:pointer; }
+  .prep-title-row .prep-title:hover{ text-decoration:underline; text-decoration-color:var(--accent); }
+  .prep-date{ flex:none; width:132px; font-size:12px; padding:5px 7px; }
+  .script-box{ width:100%; min-height:130px; font-size:13.5px; line-height:1.6; font-family:inherit; }
+  .status-seg{ display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; align-self:flex-start; }
+  .status-seg button{ border:none; background:var(--surface-raised); padding:6px 10px; font-size:11px; font-weight:700; color:var(--ink-2); cursor:pointer; }
+  .status-seg button + button{ border-left:1px solid var(--border); }
+  .status-seg button.active{ background:var(--ink); color:var(--surface); }
+  .status-seg button:hover:not(.active){ background:var(--accent-tint); }
+
   .channel-block + .channel-block{ margin-top:18px; padding-top:16px; border-top:1px solid var(--gridline); }
   .channel-head{ display:flex; align-items:baseline; justify-content:space-between; font-size:14px; }
   .channel-sub{ font-size:12px; color:var(--ink-muted); font-weight:600; font-variant-numeric:tabular-nums; }
@@ -269,6 +290,7 @@
     </div>
     <button class="nav-tab" data-view="dashboard">Dashboard<span class="count" id="nav-count-dashboard"></span></button>
     <button class="nav-tab" data-view="calendar">Calendar<span class="count" id="nav-count-calendar"></span></button>
+    <button class="nav-tab" data-view="production">Batch Prep<span class="count" id="nav-count-production"></span></button>
     <button class="nav-tab" data-view="bank">Idea Bank<span class="count" id="nav-count-bank"></span></button>
     <div class="rail-foot">
       <button class="btn btn-ghost" id="btn-export">Export JSON</button>
@@ -682,12 +704,15 @@ function renderNav(){
   });
   document.getElementById('nav-count-dashboard').textContent = '';
   document.getElementById('nav-count-calendar').textContent = countScheduledThisWeek();
+  document.getElementById('nav-count-production').textContent = countNeedingScriptThisWeek();
   document.getElementById('nav-count-bank').textContent = state.ideas.length;
 }
-function countScheduledThisWeek(){
-  const start=state.weekStart, end=addDays(start,6);
-  return state.ideas.filter(i=>i.date && i.date>=start && i.date<=end).length;
+function scheduledInWeek(weekStart){
+  const end=addDays(weekStart,6);
+  return state.ideas.filter(i=>i.date && i.date>=weekStart && i.date<=end);
 }
+function countScheduledThisWeek(){ return scheduledInWeek(state.weekStart).length; }
+function countNeedingScriptThisWeek(){ return scheduledInWeek(state.weekStart).filter(i=>i.status==='idea').length; }
 
 document.querySelectorAll('.nav-tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{ state.view = btn.dataset.view; save(); render(); });
@@ -916,6 +941,168 @@ function renderDayCard(iso, dow){
   `;
 }
 
+/* ============================= PRODUCTION / BATCH PREP =============================
+   Friday: brainstorm, pick next week's lineup, write every script here.
+   Monday: work down the list and record — mark each one off as you go. */
+function renderProduction(){
+  const weekItems = scheduledInWeek(state.weekStart);
+  const plan = computeChannelPlan(weekItems);
+  const usedIds = new Set();
+  plan.forEach(req => req.matches.forEach(m => usedIds.add(m.id)));
+  const leftovers = weekItems.filter(i=>!usedIds.has(i.id)).sort((a,b)=>a.date.localeCompare(b.date));
+
+  const needsScript = weekItems.filter(i=>i.status==='idea').length;
+  const readyToRecord = weekItems.filter(i=>i.status==='scripted').length;
+  const filmed = weekItems.filter(i=>i.status==='filmed').length;
+  const posted = weekItems.filter(i=>i.status==='posted').length;
+  const totalNeed = WEEKLY_PLAN.reduce((a,r)=>a+r.need,0);
+  const slotsFilled = plan.reduce((a,r)=>a+Math.min(r.got,r.need),0);
+
+  document.getElementById('main').innerHTML = `
+    <div class="page-head">
+      <div class="eyebrow">Production</div>
+      <h2>Batch Prep</h2>
+      <p>Fridays: brainstorm, pick next week's lineup, write every script. Mondays: work down this same list and record — mark each one off as you go.</p>
+    </div>
+    <div class="cal-toolbar">
+      <button class="btn" id="prep-prev">← Prev week</button>
+      <button class="btn" id="prep-today">This week</button>
+      <button class="btn" id="prep-next">Next week →</button>
+      <div class="range">${fmtRange(state.weekStart)}</div>
+    </div>
+
+    <div class="grid stat-row">
+      <div class="card stat-tile"><div class="label">Slots filled</div><div class="value">${slotsFilled}/${totalNeed}</div><div class="sub">this week's lineup</div></div>
+      <div class="card stat-tile"><div class="label">Needs a script</div><div class="value">${needsScript}</div><div class="sub">write before recording</div></div>
+      <div class="card stat-tile"><div class="label">Ready to record</div><div class="value">${readyToRecord}</div><div class="sub">scripted, not filmed yet</div></div>
+      <div class="card stat-tile"><div class="label">Filmed</div><div class="value">${filmed}</div><div class="sub">${posted} already posted</div></div>
+    </div>
+
+    <div class="prep-channel">
+      <h3 class="prep-channel-title">LinkedIn</h3>
+      <div class="prep-slots">${renderPrepSlots(plan.filter(p=>p.channel==='linkedin'))}</div>
+    </div>
+    <div class="prep-channel">
+      <h3 class="prep-channel-title">Instagram + TikTok</h3>
+      <div class="prep-slots">${renderPrepSlots(plan.filter(p=>p.channel==='social'))}</div>
+    </div>
+    ${leftovers.length ? `
+    <div class="prep-channel">
+      <h3 class="prep-channel-title">Other content this week</h3>
+      <div class="prep-slots">${leftovers.map(i=>prepCard(i)).join('')}</div>
+    </div>` : ''}
+  `;
+
+  document.getElementById('prep-prev').addEventListener('click', ()=>{ state.weekStart=addDays(state.weekStart,-7); save(); render(); });
+  document.getElementById('prep-next').addEventListener('click', ()=>{ state.weekStart=addDays(state.weekStart,7); save(); render(); });
+  document.getElementById('prep-today').addEventListener('click', ()=>{ state.weekStart=mondayOf(todayISO()); save(); render(); });
+
+  bindProductionInteractions();
+}
+
+function renderPrepSlots(reqs){
+  return reqs.map(req=>{
+    const cards = [];
+    for(let idx=0; idx<req.need; idx++){
+      const m = req.matches[idx];
+      const label = req.label + (req.need>1 ? ' · '+(idx+1)+' of '+req.need : '');
+      cards.push(m ? prepCard(m, label) : emptySlotCard(req, label));
+    }
+    req.matches.slice(req.need).forEach(m=> cards.push(prepCard(m, req.label+' · extra')));
+    return cards.join('');
+  }).join('');
+}
+
+function readyBadge(idea){
+  if(idea.status==='idea') return '<span class="status-chip critical">Needs a script</span>';
+  if(idea.status==='scripted') return '<span class="status-chip good">Ready to record</span>';
+  if(idea.status==='filmed') return '<span class="status-chip" style="background:var(--accent-tint); color:var(--ink-2);">🎬 Filmed</span>';
+  return '<span class="status-chip good">✓ Posted</span>';
+}
+
+function prepCard(idea, slotLabel){
+  return `
+    <div class="prep-card" data-id="${idea.id}">
+      <div class="prep-head">
+        <div class="prep-meta">
+          ${slotLabel ? `<span class="prep-slot-label">${esc(slotLabel)}</span>` : ''}
+          ${pillarPill(idea.pillar)}
+          ${idea.platforms.map(p=>outlinePill(PLATFORM_MAP[p].label)).join('')}
+        </div>
+        ${readyBadge(idea)}
+      </div>
+      <div class="prep-title-row">
+        <input type="date" class="prep-date" data-id="${idea.id}" value="${idea.date||''}" title="Change the scheduled day">
+        <b class="prep-title" data-open="${idea.id}" title="Open full details">${esc(idea.title)}</b>
+        <button class="chip-remove" data-unschedule-chip="${idea.id}" title="Remove from this week — back to bank" aria-label="Remove from this week">×</button>
+      </div>
+      <div class="status-seg" data-id="${idea.id}">
+        ${STATUSES.map(s=>`<button data-set-status="${s.id}" class="${idea.status===s.id?'active':''}">${esc(s.label)}</button>`).join('')}
+      </div>
+      <textarea class="script-box" data-script="${idea.id}" placeholder="Write the full script here…">${esc(idea.notes||'')}</textarea>
+    </div>
+  `;
+}
+
+function emptySlotCard(req, label){
+  return `
+    <div class="prep-card empty">
+      <div class="prep-slot-label">${esc(label)} · not selected yet</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm" data-prep-pick="${req.pillar}">+ From idea bank</button>
+        <button class="btn btn-sm" data-prep-new="${req.pillar}">+ New idea</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindProductionInteractions(){
+  bindChipInteractions(); // wires the × (unschedule) buttons on prep cards too
+
+  document.querySelectorAll('.prep-title[data-open]').forEach(el=>{
+    el.addEventListener('click', ()=> openIdeaModal(el.dataset.open));
+  });
+  document.querySelectorAll('.prep-date').forEach(el=>{
+    el.addEventListener('change', ()=>{
+      const idea = state.ideas.find(i=>i.id===el.dataset.id);
+      if(idea){ idea.date = el.value || null; save(); render(); }
+    });
+  });
+  document.querySelectorAll('.status-seg [data-set-status]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const wrap = el.closest('.status-seg');
+      const idea = state.ideas.find(i=>i.id===wrap.dataset.id);
+      if(idea){ idea.status = el.dataset.setStatus; save(); render(); }
+    });
+  });
+  document.querySelectorAll('[data-prep-pick]').forEach(el=>{
+    el.addEventListener('click', ()=> openPickerModal(state.weekStart, el.dataset.prepPick));
+  });
+  document.querySelectorAll('[data-prep-new]').forEach(el=>{
+    el.addEventListener('click', ()=> openIdeaModal(null, state.weekStart, el.dataset.prepNew));
+  });
+  // Typing a script auto-promotes a bare idea to "scripted" — reflected instantly
+  // without a full re-render so the textarea never loses focus mid-sentence.
+  document.querySelectorAll('.script-box').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const idea = state.ideas.find(i=>i.id===el.dataset.script);
+      if(!idea) return;
+      idea.notes = el.value;
+      if(idea.status==='idea' && el.value.trim()){
+        idea.status = 'scripted';
+        const card = el.closest('.prep-card');
+        card?.querySelectorAll('.status-seg button').forEach(b=>{
+          b.classList.toggle('active', b.dataset.setStatus==='scripted');
+        });
+        const badge = card?.querySelector('.prep-head .status-chip');
+        if(badge) badge.outerHTML = readyBadge(idea);
+      }
+      save();
+    });
+    el.addEventListener('blur', ()=> render());
+  });
+}
+
 /* ============================= IDEA BANK ============================= */
 function matchesFilters(i){
   const f = state.filters;
@@ -1011,10 +1198,10 @@ function rowTemplate(i){
 /* ============================= MODALS ============================= */
 function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
 
-function openIdeaModal(id, presetDate){
+function openIdeaModal(id, presetDate, presetPillar){
   const editing = !!id;
   const idea = editing ? state.ideas.find(i=>i.id===id) : {
-    id:null, title:'', pillar:'career', format:'teaching', platforms:['tiktok'],
+    id:null, title:'', pillar:presetPillar||'career', format:'teaching', platforms:['tiktok'],
     language:'ES', status:'idea', date: presetDate||null, notes:''
   };
   const root = document.getElementById('modal-root');
@@ -1104,14 +1291,18 @@ function openIdeaModal(id, presetDate){
   });
 }
 
-function openPickerModal(dateIso){
+function openPickerModal(dateIso, pillarFilter){
   const backlog = state.ideas.filter(i=>!i.date);
+  let onlyPillar = !!pillarFilter;
   const root = document.getElementById('modal-root');
   root.innerHTML = `
     <div class="overlay" id="modal-overlay">
       <div class="modal" role="dialog" aria-modal="true">
         <h3>Schedule for ${esc(fmtDay(dateIso))}</h3>
         <input type="search" id="pick-q" placeholder="Search unscheduled ideas…" style="width:100%;">
+        ${pillarFilter ? `<label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--ink-2); margin-top:8px;">
+          <input type="checkbox" id="pick-pillar-only" checked> Only ${esc(PILLAR_MAP[pillarFilter].label)} ideas
+        </label>` : ''}
         <div class="picker-list" id="pick-list"></div>
         <div class="modal-foot">
           <span></span>
@@ -1121,7 +1312,10 @@ function openPickerModal(dateIso){
     </div>
   `;
   function renderList(q){
-    const list = backlog.filter(i=> i.title.toLowerCase().includes((q||'').toLowerCase()));
+    const list = backlog.filter(i=>
+      i.title.toLowerCase().includes((q||'').toLowerCase()) &&
+      (!onlyPillar || i.pillar===pillarFilter)
+    );
     document.getElementById('pick-list').innerHTML = list.length ? list.map(i=>`
       <div class="picker-row" data-pick="${i.id}">
         <span>${esc(i.title)}</span>
@@ -1134,6 +1328,7 @@ function openPickerModal(dateIso){
   }
   renderList('');
   document.getElementById('pick-q').addEventListener('input', e=> renderList(e.target.value));
+  document.getElementById('pick-pillar-only')?.addEventListener('change', e=>{ onlyPillar = e.target.checked; renderList(document.getElementById('pick-q').value); });
   document.getElementById('modal-overlay').addEventListener('click', e=>{ if(e.target.id==='modal-overlay') closeModal(); });
   document.getElementById('pick-cancel').addEventListener('click', closeModal);
 }
@@ -1206,6 +1401,7 @@ function render(){
   renderNav();
   if(state.view==='calendar') renderCalendar();
   else if(state.view==='bank') renderBank();
+  else if(state.view==='production') renderProduction();
   else renderDashboard();
 }
 render();

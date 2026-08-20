@@ -20,7 +20,8 @@ This is what drives the 50% Growth / 33% Orinti / 17% ELUK objective-balance tar
 ## What's inside
 
 - **Dashboard** — the objective-balance chart (is a month running heavier on Orinti than the plan calls for, or light on ELUK?) and this week's channel-plan checklist, broken out by LinkedIn vs. Instagram+TikTok.
-- **Calendar** — a Monday–Sunday week planner. Schedule an idea from the bank onto a day, or write a new one on the spot.
+- **Calendar** — a Monday–Sunday week planner. Schedule an idea from the bank onto a day, or write a new one on the spot. "This week's balance" shows the platform mix (a cross-posted idea can count toward more than one platform).
+- **Batch Prep** — the Friday/Monday production workflow. One card per slot in the week's plan (2 Orinti + 1 ELUK on LinkedIn, financial literacy + a skill + entrepreneurship on Instagram/TikTok), each with its own script textarea and a 4-stage status control (Idea → Scripted → Filmed → Posted). Write scripts here on Fridays; work down the same list on Mondays and mark each one off as you record it. Stat tiles at the top show what still needs a script vs. what's ready to record.
 - **Idea Bank** — 165 seeded ideas pulled from Elizabeth's own notes, tagged by pillar, objective, platform, format, language, and production status. Filterable, editable, exportable.
 
 Data is stored in your browser's local storage — nothing leaves your device. Use **Export JSON** to back up, **Import JSON** to restore, or **Export CSV** to hand the plan to someone else (e.g. an editor or VA).

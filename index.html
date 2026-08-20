@@ -332,14 +332,18 @@ const PILLAR_OBJECTIVE = {
   representation:'growth', money:'growth', orinti:'orinti', eluk:'eluk',
 };
 
-// Derived from the weekly channel plan below: 6 posts/week = 3 growth + 2 orinti + 1 eluk.
+// Derived from the weekly channel plan below, averaged over 2 weeks (12 posts):
+// 3 growth + 3 growth/personal-growth-alt-weeks + 4 orinti + 1 eluk ≈ 59/33/8.
+// The 3rd LinkedIn slot alternates Empower LATAM UK / personal growth (Mindset,
+// a growth-objective pillar), which is why ELUK's long-run share is closer to
+// 1-in-12 than 1-in-6.
 const OBJECTIVES = [
-  { id:'growth', label:'Audience Growth — Personal Brand', short:'Growth', target:50, colorVar:'--obj-growth',
-    blurb:'3 educational cross-posts a week on Instagram + TikTok — financial literacy, a skill, and entrepreneurship/career.' },
+  { id:'growth', label:'Audience Growth — Personal Brand', short:'Growth', target:59, colorVar:'--obj-growth',
+    blurb:'3 educational cross-posts a week on Instagram + TikTok, plus personal-growth LinkedIn posts on alternating weeks.' },
   { id:'orinti', label:'Orinti — Founder / Agency', short:'Orinti', target:33, colorVar:'--obj-orinti',
     blurb:'2 LinkedIn posts a week on the agency — founder journey and client work.' },
-  { id:'eluk',   label:'Empower LATAM UK — Impact', short:'ELUK', target:17, colorVar:'--obj-eluk',
-    blurb:'1 LinkedIn post a week carrying the Empower LATAM UK impact story.' },
+  { id:'eluk',   label:'Empower LATAM UK — Impact', short:'ELUK', target:8, colorVar:'--obj-eluk',
+    blurb:'1 LinkedIn post every other week carrying the Empower LATAM UK impact story.' },
 ];
 const OBJECTIVE_MAP = Object.fromEntries(OBJECTIVES.map(o=>[o.id,o]));
 
@@ -364,7 +368,7 @@ function normalizePlatforms(list){
 // Channels group platforms for weekly-plan purposes: Instagram + TikTok are
 // planned as one cross-posted educational slate; LinkedIn is planned on its own.
 const CHANNELS = {
-  linkedin: { id:'linkedin', label:'LinkedIn', sub:'3 posts/week — 2 Orinti + 1 social impact', platforms:['linkedin'] },
+  linkedin: { id:'linkedin', label:'LinkedIn', sub:'3 posts/week — 2 Orinti + 1 alternating: Empower LATAM UK ↔ personal growth', platforms:['linkedin'] },
   social:   { id:'social',   label:'Instagram + TikTok', sub:'3 posts/week, cross-posted — all educational', platforms:['tiktok','instagram'] },
 };
 
@@ -394,15 +398,31 @@ const LANGS = [
   { id:'BI', label:'Bilingual' },
 ];
 
+// The third LinkedIn slot alternates week to week between Empower LATAM UK
+// and personal-growth content (the Mindset pillar) — parity of a stable
+// week index decides which, so it flips consistently regardless of which
+// direction you navigate from.
+const WEEK_EPOCH = mondayOf('2024-01-01');
+function isElukWeek(weekStart){
+  const diffDays = Math.round((fromISO(weekStart) - fromISO(WEEK_EPOCH)) / 86400000);
+  return Math.round(diffDays/7) % 2 === 0;
+}
+
 // The weekly posting plan: what has to go out on each channel, and which
 // pillar it should come from. "need" is how many posts fill that slot.
-const WEEKLY_PLAN = [
-  { id:'li-orinti', channel:'linkedin', pillar:'orinti', need:2, label:'Orinti — marketing agency' },
-  { id:'li-eluk',   channel:'linkedin', pillar:'eluk',   need:1, label:'Empower LATAM UK — social impact' },
-  { id:'so-money',  channel:'social',   pillar:'money',  need:1, label:'Financial literacy' },
-  { id:'so-skill',  channel:'social',   pillar:'studies',need:1, label:'Skill — tech / AI / business' },
-  { id:'so-career', channel:'social',   pillar:'career', need:1, label:'Entrepreneurship & career' },
-];
+// Depends on the week because the third LinkedIn slot alternates.
+function getWeeklyPlan(weekStart){
+  const elukWeek = isElukWeek(weekStart);
+  return [
+    { id:'li-orinti', channel:'linkedin', pillar:'orinti', need:2, label:'Orinti — marketing agency' },
+    elukWeek
+      ? { id:'li-alt', channel:'linkedin', pillar:'eluk',    need:1, label:'Empower LATAM UK — social impact' }
+      : { id:'li-alt', channel:'linkedin', pillar:'mindset', need:1, label:'Personal growth' },
+    { id:'so-money',  channel:'social', pillar:'money',   need:1, label:'Financial literacy' },
+    { id:'so-skill',  channel:'social', pillar:'studies', need:1, label:'Skill — tech / AI / business' },
+    { id:'so-career', channel:'social', pillar:'career',  need:1, label:'Entrepreneurship & career' },
+  ];
+}
 
 /* ============================= SEED CONTENT BANK ============================= */
 let seedCounter = 0;
@@ -769,11 +789,11 @@ function renderDashboard(){
     <div class="grid" style="grid-template-columns:1.3fr 1fr; align-items:start;">
       <div class="card">
         <div class="section-title">Objective balance ${hasBalanceData? '· '+(monthIdeas.length? 'this month':'this week') : ''}</div>
-        ${hasBalanceData ? renderBalanceChart(balance) : '<p style="color:var(--ink-muted); font-size:13px;">Schedule a few ideas onto the calendar to see how your content mix compares to the 50 / 33 / 17 target.</p>'}
+        ${hasBalanceData ? renderBalanceChart(balance) : '<p style="color:var(--ink-muted); font-size:13px;">Schedule a few ideas onto the calendar to see how your content mix compares to the 59 / 33 / 8 target.</p>'}
       </div>
       <div class="card">
         <div class="section-title">This week's channel plan — ${fmtRange(state.weekStart)}</div>
-        ${renderChannelPlan(scheduledWeek)}
+        ${renderChannelPlan(scheduledWeek, state.weekStart)}
         <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="goto-calendar">Open this week →</button></div>
       </div>
     </div>
@@ -840,8 +860,8 @@ function renderPlatformBalanceChart(items){
   return `<div class="plat-bars">${rows}</div>`;
 }
 
-function computeChannelPlan(scheduledWeek){
-  return WEEKLY_PLAN.map(req=>{
+function computeChannelPlan(scheduledWeek, weekStart){
+  return getWeeklyPlan(weekStart).map(req=>{
     const platforms = CHANNELS[req.channel].platforms;
     const matches = scheduledWeek
       .filter(i=> i.pillar===req.pillar && i.platforms.some(p=>platforms.includes(p)))
@@ -858,8 +878,8 @@ function miniItemRow(idea){
   </li>`;
 }
 
-function renderChannelPlan(scheduledWeek){
-  const progress = computeChannelPlan(scheduledWeek);
+function renderChannelPlan(scheduledWeek, weekStart){
+  const progress = computeChannelPlan(scheduledWeek, weekStart);
   const section = (channelId)=>{
     const ch = CHANNELS[channelId];
     const items = progress.filter(p=>p.channel===channelId);
@@ -911,7 +931,7 @@ function renderCalendar(){
     <div class="grid" style="grid-template-columns:1fr 1fr; align-items:start; margin-top:18px;">
       <div class="card">
         <div class="section-title">Channel plan — ${fmtRange(state.weekStart)}</div>
-        ${renderChannelPlan(scheduledWeek)}
+        ${renderChannelPlan(scheduledWeek, state.weekStart)}
       </div>
       <div class="card">
         <div class="section-title">This week's balance — by platform</div>
@@ -961,7 +981,7 @@ function renderDayCard(iso, dow){
    Monday: work down the list and record — mark each one off as you go. */
 function renderProduction(){
   const weekItems = scheduledInWeek(state.weekStart);
-  const plan = computeChannelPlan(weekItems);
+  const plan = computeChannelPlan(weekItems, state.weekStart);
   const usedIds = new Set();
   plan.forEach(req => req.matches.forEach(m => usedIds.add(m.id)));
   const leftovers = weekItems.filter(i=>!usedIds.has(i.id)).sort((a,b)=>a.date.localeCompare(b.date));
@@ -970,7 +990,7 @@ function renderProduction(){
   const readyToRecord = weekItems.filter(i=>i.status==='scripted').length;
   const filmed = weekItems.filter(i=>i.status==='filmed').length;
   const posted = weekItems.filter(i=>i.status==='posted').length;
-  const totalNeed = WEEKLY_PLAN.reduce((a,r)=>a+r.need,0);
+  const totalNeed = getWeeklyPlan(state.weekStart).reduce((a,r)=>a+r.need,0);
   const slotsFilled = plan.reduce((a,r)=>a+Math.min(r.got,r.need),0);
 
   document.getElementById('main').innerHTML = `

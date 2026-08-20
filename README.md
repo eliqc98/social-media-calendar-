@@ -12,10 +12,10 @@ Content is planned per channel, 6 posts a week total:
 
 | Channel | Cadence | Slots |
 |---|---|---|
-| **LinkedIn** | 3 posts/week | 2× Orinti (marketing agency) + 1× Empower LATAM UK (social impact) |
+| **LinkedIn** | 3 posts/week | 2× Orinti (marketing agency) + 1× **alternating**: Empower LATAM UK (social impact) one week, personal growth (Mindset) the next |
 | **Instagram + TikTok** | 3 posts/week, cross-posted | 1× financial literacy, 1× skill (tech/AI/business), 1× entrepreneurship & career — all educational |
 
-This is what drives the 50% Growth / 33% Orinti / 17% ELUK objective-balance target on the dashboard.
+The alternation is based on a stable week index, so it flips consistently no matter which direction you navigate the calendar from — Batch Prep and the channel-plan checklist always show the correct one for the week you're looking at. Averaged over two weeks this drives the 59% Growth / 33% Orinti / 8% ELUK objective-balance target on the dashboard.
 
 ## What's inside
 

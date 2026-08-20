@@ -109,6 +109,11 @@
   .nav-tab[aria-current="true"]{ background:var(--ink); color:var(--surface); }
   .nav-tab .count{ margin-left:auto; font-size:12px; color:var(--ink-muted); font-variant-numeric:tabular-nums; }
   .nav-tab[aria-current="true"] .count{ color:var(--surface); opacity:.7; }
+  .nav-tab .count.count-attn{
+    background:var(--critical-tint); color:var(--critical); font-weight:700; opacity:1;
+    padding:1px 7px; border-radius:999px;
+  }
+  .nav-tab[aria-current="true"] .count.count-attn{ background:var(--surface); color:var(--critical); }
   .rail-foot{ margin-top:auto; padding:10px; display:flex; flex-direction:column; gap:8px; }
   .rail-foot button{ font-size:12px; }
 
@@ -702,9 +707,19 @@ function renderNav(){
   document.querySelectorAll('.nav-tab').forEach(btn=>{
     btn.setAttribute('aria-current', btn.dataset.view===state.view ? 'true':'false');
   });
+  // Zero-count badges are hidden rather than shown as a bare "0" — an empty
+  // badge reads as broken/nothing-there, where no badge at all reads as
+  // "nothing needs your attention," which is the actual message.
   document.getElementById('nav-count-dashboard').textContent = '';
-  document.getElementById('nav-count-calendar').textContent = countScheduledThisWeek();
-  document.getElementById('nav-count-production').textContent = countNeedingScriptThisWeek();
+  const calCount = countScheduledThisWeek();
+  const calEl = document.getElementById('nav-count-calendar');
+  calEl.textContent = calCount>0 ? calCount : '';
+  calEl.title = calCount>0 ? calCount+' idea'+(calCount===1?'':'s')+' scheduled this week' : '';
+  const needCount = countNeedingScriptThisWeek();
+  const needEl = document.getElementById('nav-count-production');
+  needEl.textContent = needCount>0 ? needCount : '';
+  needEl.title = needCount>0 ? needCount+' idea'+(needCount===1?'':'s')+' scheduled this week still need'+(needCount===1?'s':'')+' a script' : 'Nothing scheduled this week still needs a script';
+  needEl.classList.toggle('count-attn', needCount>0);
   document.getElementById('nav-count-bank').textContent = state.ideas.length;
 }
 function scheduledInWeek(weekStart){

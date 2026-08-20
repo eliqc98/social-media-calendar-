@@ -953,7 +953,22 @@ function openPickerModal(dateIso){
 }
 
 /* ============================= EXPORT / IMPORT / RESET ============================= */
-function download(filename, content, mime){
+async function saveFile(filename, content, mime){
+  // Prefer the artifact host's downloads capability when present (it shows
+  // the viewer a confirmation and hands off to the real save surface).
+  if (window.claude && typeof window.claude.use === 'function'){
+    try{
+      const downloads = await window.claude.use('downloads');
+      if (downloads){
+        await downloads.save({ filename, data: content });
+        toast('Saved '+filename);
+        return;
+      }
+    }catch(err){
+      if (err && err.code === 'declined') return; // user said no, stay quiet
+      // fall through to the classic download link for anything else
+    }
+  }
   const blob = new Blob([content], {type:mime});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -963,7 +978,7 @@ function download(filename, content, mime){
 }
 
 document.getElementById('btn-export').addEventListener('click', ()=>{
-  download('content-ecosystem-calendar.json', JSON.stringify(state.ideas, null, 2), 'application/json');
+  saveFile('content-ecosystem-calendar.json', JSON.stringify(state.ideas, null, 2), 'application/json');
 });
 document.getElementById('btn-export-csv').addEventListener('click', ()=>{
   const cols = ['Title','Pillar','Objective','Platform','Format','Language','Status','Date','Notes'];
@@ -976,7 +991,7 @@ document.getElementById('btn-export-csv').addEventListener('click', ()=>{
     const s = String(v==null?'':v).replace(/"/g,'""');
     return /[",\n]/.test(s) ? '"'+s+'"' : s;
   }).join(',')).join('\n');
-  download('content-ecosystem-calendar.csv', csv, 'text/csv');
+  saveFile('content-ecosystem-calendar.csv', csv, 'text/csv');
 });
 document.getElementById('btn-import').addEventListener('click', ()=> document.getElementById('file-import').click());
 document.getElementById('file-import').addEventListener('change', (e)=>{

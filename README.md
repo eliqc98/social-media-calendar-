@@ -6,9 +6,20 @@ A single-file planning app for Elizabeth's content across TikTok, Instagram, and
 - **Empower LATAM UK (target 25%)** — mentee stories, impact stats, advocacy. Turns audience into community.
 - **Orinti / Founder (target 20%)** — agency journey, client work, mostly LinkedIn. Turns reputation into clients.
 
+## Weekly posting plan
+
+Content is planned per channel, 6 posts a week total:
+
+| Channel | Cadence | Slots |
+|---|---|---|
+| **LinkedIn** | 3 posts/week | 2× Orinti (marketing agency) + 1× Empower LATAM UK (social impact) |
+| **Instagram + TikTok** | 3 posts/week, cross-posted | 1× financial literacy, 1× skill (tech/AI/business), 1× entrepreneurship & career — all educational |
+
+This is what drives the 50% Growth / 33% Orinti / 17% ELUK objective-balance target on the dashboard.
+
 ## What's inside
 
-- **Dashboard** — objective-balance chart (are you over-indexed on Orinti or missing ELUK this month?) and a weekly minimum checklist (1 teaching post · 1 vlog · 1 social, matching the stated posting objective).
+- **Dashboard** — the objective-balance chart (is a month running heavier on Orinti than the plan calls for, or light on ELUK?) and this week's channel-plan checklist, broken out by LinkedIn vs. Instagram+TikTok.
 - **Calendar** — a Monday–Sunday week planner. Schedule an idea from the bank onto a day, or write a new one on the spot.
 - **Idea Bank** — 165 seeded ideas pulled from Elizabeth's own notes, tagged by pillar, objective, platform, format, language, and production status. Filterable, editable, exportable.
 

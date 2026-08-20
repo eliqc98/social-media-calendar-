@@ -141,6 +141,9 @@
   .status-chip.warning{ background:var(--warning-tint); color:var(--warning); }
   .status-chip.critical{ background:var(--critical-tint); color:var(--critical); }
 
+  .channel-block + .channel-block{ margin-top:18px; padding-top:16px; border-top:1px solid var(--gridline); }
+  .channel-head{ display:flex; align-items:baseline; justify-content:space-between; font-size:14px; }
+  .channel-sub{ font-size:12px; color:var(--ink-muted); font-weight:600; font-variant-numeric:tabular-nums; }
   .checklist{ display:grid; gap:10px; margin-top:8px; }
   .check-item{ display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:13.5px; }
   .check-item .dot{ width:20px; height:20px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
@@ -261,13 +264,14 @@ const PILLAR_OBJECTIVE = {
   representation:'growth', money:'growth', orinti:'orinti', eluk:'eluk',
 };
 
+// Derived from the weekly channel plan below: 6 posts/week = 3 growth + 2 orinti + 1 eluk.
 const OBJECTIVES = [
-  { id:'growth', label:'Audience Growth — Personal Brand', short:'Growth', target:55, colorVar:'--obj-growth',
-    blurb:'Career, studies, lifestyle, mindset, representation & money — the trust engine.' },
-  { id:'eluk',   label:'Empower LATAM UK — Impact', short:'ELUK', target:25, colorVar:'--obj-eluk',
-    blurb:'Mentee stories, impact stats, advocacy — turns audience into community.' },
-  { id:'orinti', label:'Orinti — Founder / Agency', short:'Orinti', target:20, colorVar:'--obj-orinti',
-    blurb:'Founder journey & client work — turns reputation into paying clients.' },
+  { id:'growth', label:'Audience Growth — Personal Brand', short:'Growth', target:50, colorVar:'--obj-growth',
+    blurb:'3 educational cross-posts a week on Instagram + TikTok — financial literacy, a skill, and entrepreneurship/career.' },
+  { id:'orinti', label:'Orinti — Founder / Agency', short:'Orinti', target:33, colorVar:'--obj-orinti',
+    blurb:'2 LinkedIn posts a week on the agency — founder journey and client work.' },
+  { id:'eluk',   label:'Empower LATAM UK — Impact', short:'ELUK', target:17, colorVar:'--obj-eluk',
+    blurb:'1 LinkedIn post a week carrying the Empower LATAM UK impact story.' },
 ];
 const OBJECTIVE_MAP = Object.fromEntries(OBJECTIVES.map(o=>[o.id,o]));
 
@@ -278,6 +282,13 @@ const PLATFORMS = [
   { id:'linkedin',  label:'LinkedIn' },
 ];
 const PLATFORM_MAP = Object.fromEntries(PLATFORMS.map(p=>[p.id,p]));
+
+// Channels group platforms for weekly-plan purposes: Instagram + TikTok are
+// planned as one cross-posted educational slate; LinkedIn is planned on its own.
+const CHANNELS = {
+  linkedin: { id:'linkedin', label:'LinkedIn', sub:'3 posts/week — 2 Orinti + 1 social impact', platforms:['linkedin'] },
+  social:   { id:'social',   label:'Instagram + TikTok', sub:'3 posts/week, cross-posted — all educational', platforms:['tiktok','reels','instagram'] },
+};
 
 const FORMATS = [
   { id:'teaching',  label:'Teaching Post' },
@@ -305,10 +316,14 @@ const LANGS = [
   { id:'BI', label:'Bilingual' },
 ];
 
-const WEEKLY_MINIMUMS = [
-  { format:'teaching', label:'1 teaching post' },
-  { format:'vlog',     label:'1 vlog' },
-  { format:'social',   label:'1 social/story (min.)' },
+// The weekly posting plan: what has to go out on each channel, and which
+// pillar it should come from. "need" is how many posts fill that slot.
+const WEEKLY_PLAN = [
+  { id:'li-orinti', channel:'linkedin', pillar:'orinti', need:2, label:'Orinti — marketing agency' },
+  { id:'li-eluk',   channel:'linkedin', pillar:'eluk',   need:1, label:'Empower LATAM UK — social impact' },
+  { id:'so-money',  channel:'social',   pillar:'money',  need:1, label:'Financial literacy' },
+  { id:'so-skill',  channel:'social',   pillar:'studies',need:1, label:'Skill — tech / AI / business' },
+  { id:'so-career', channel:'social',   pillar:'career', need:1, label:'Entrepreneurship & career' },
 ];
 
 /* ============================= SEED CONTENT BANK ============================= */
@@ -503,11 +518,11 @@ const SEED_IDEAS = [
   I("Why I Started Empower LATAM UK","eluk","storytime","instagram","ES"),
   I("A Mentee's Story — Where She Started and Where She Is Now","eluk","storytime","instagram","ES"),
   I("Behind the Scenes of Our LAMP/LACAP Mentorship Programme","eluk","vlog","instagram","ES"),
-  I("Event Recap: Our Latest Corporate Partnership","eluk","vlog","instagram","EN"),
+  I("Event Recap: Our Latest Corporate Partnership","eluk","vlog","linkedin","EN"),
   I("Speaking on a Panel at the UN — What It Means for Our Community","eluk","storytime","linkedin","EN"),
   I("Why Latin American Representation in the UK Matters","eluk","teaching","instagram","ES"),
   I("How You Can Get Involved With Empower LATAM UK","eluk","teaching","instagram","ES"),
-  I("This Year's Impact Numbers — How Many People We've Supported","eluk","founder","instagram","EN"),
+  I("This Year's Impact Numbers — How Many People We've Supported","eluk","founder","linkedin","EN"),
 ];
 
 /* ============================= STATE ============================= */
@@ -618,16 +633,11 @@ function renderDashboard(){
   const balance = computeBalance(balanceSource.length ? balanceSource : []);
   const hasBalanceData = balanceSource.length>0;
 
-  const weeklyCheck = WEEKLY_MINIMUMS.map(w=>{
-    const met = scheduledWeek.some(i=>i.format===w.format);
-    return { ...w, met };
-  });
-
   document.getElementById('main').innerHTML = `
     <div class="page-head">
       <div class="eyebrow">Dashboard</div>
       <h2>La generación que rompe el ciclo</h2>
-      <p>One story, three engines: personal-brand content builds trust, Empower LATAM UK turns it into community, Orinti turns it into clients.</p>
+      <p>One story, three engines: personal-brand content builds trust, Empower LATAM UK turns it into community, Orinti turns it into clients. 3 posts/week on LinkedIn, 3 cross-posted on Instagram + TikTok.</p>
     </div>
 
     <div class="grid stat-row">
@@ -639,17 +649,11 @@ function renderDashboard(){
     <div class="grid" style="grid-template-columns:1.3fr 1fr; align-items:start;">
       <div class="card">
         <div class="section-title">Objective balance ${hasBalanceData? '· '+(monthIdeas.length? 'this month':'this week') : ''}</div>
-        ${hasBalanceData ? renderBalanceChart(balance) : '<p style="color:var(--ink-muted); font-size:13px;">Schedule a few ideas onto the calendar to see how your content mix compares to the 55 / 25 / 20 target.</p>'}
+        ${hasBalanceData ? renderBalanceChart(balance) : '<p style="color:var(--ink-muted); font-size:13px;">Schedule a few ideas onto the calendar to see how your content mix compares to the 50 / 33 / 17 target.</p>'}
       </div>
       <div class="card">
-        <div class="section-title">This week's minimum — ${fmtRange(state.weekStart)}</div>
-        <div class="checklist">
-          ${weeklyCheck.map(w=>`
-            <div class="check-item ${w.met?'met':'unmet'}">
-              <div class="dot">${w.met?'✓':'!'}</div>
-              <div class="txt"><b>${esc(w.label)}</b><br><span>${w.met? 'scheduled this week' : 'not scheduled yet'}</span></div>
-            </div>`).join('')}
-        </div>
+        <div class="section-title">This week's channel plan — ${fmtRange(state.weekStart)}</div>
+        ${renderChannelPlan(scheduledWeek)}
         <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="goto-calendar">Open this week →</button></div>
       </div>
     </div>
@@ -691,13 +695,46 @@ function renderBalanceChart(balance){
   `;
 }
 
+function computeChannelPlan(scheduledWeek){
+  return WEEKLY_PLAN.map(req=>{
+    const platforms = CHANNELS[req.channel].platforms;
+    const got = scheduledWeek.filter(i=> i.pillar===req.pillar && platforms.includes(i.platform)).length;
+    return { ...req, got, met: got>=req.need };
+  });
+}
+
+function renderChannelPlan(scheduledWeek){
+  const progress = computeChannelPlan(scheduledWeek);
+  const section = (channelId)=>{
+    const ch = CHANNELS[channelId];
+    const items = progress.filter(p=>p.channel===channelId);
+    const done = items.reduce((a,p)=>a+Math.min(p.got,p.need),0);
+    const total = items.reduce((a,p)=>a+p.need,0);
+    return `
+      <div class="channel-block">
+        <div class="channel-head">
+          <b>${esc(ch.label)}</b>
+          <span class="channel-sub">${done}/${total} this week</span>
+        </div>
+        <p style="color:var(--ink-muted); font-size:12px; margin:2px 0 10px;">${esc(ch.sub)}</p>
+        <div class="checklist">
+          ${items.map(it=>`
+            <div class="check-item ${it.met?'met':'unmet'}">
+              <div class="dot">${it.met?'✓':'!'}</div>
+              <div class="txt"><b>${esc(it.label)}</b><br><span>${it.got}/${it.need} scheduled</span></div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  };
+  return section('linkedin') + section('social');
+}
+
 /* ============================= CALENDAR ============================= */
 function renderCalendar(){
   const days = [0,1,2,3,4,5,6].map(n=>addDays(state.weekStart,n));
   const dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const scheduledWeek = state.ideas.filter(i=>i.date && i.date>=state.weekStart && i.date<=addDays(state.weekStart,6));
   const balance = computeBalance(scheduledWeek);
-  const weeklyCheck = WEEKLY_MINIMUMS.map(w=>({...w, met: scheduledWeek.some(i=>i.format===w.format)}));
 
   document.getElementById('main').innerHTML = `
     <div class="page-head">
@@ -714,11 +751,14 @@ function renderCalendar(){
     <div class="cal-grid">
       ${days.map((iso,idx)=>renderDayCard(iso, dowLabels[idx])).join('')}
     </div>
-    <div class="card" style="margin-top:18px;">
-      <div class="section-title">This week's balance</div>
-      ${scheduledWeek.length? renderBalanceChart(balance) : '<p style="color:var(--ink-muted); font-size:13px;">Nothing scheduled this week yet.</p>'}
-      <div class="checklist" style="margin-top:14px;">
-        ${weeklyCheck.map(w=>`<div class="check-item ${w.met?'met':'unmet'}"><div class="dot">${w.met?'✓':'!'}</div><div class="txt"><b>${esc(w.label)}</b></div></div>`).join('')}
+    <div class="grid" style="grid-template-columns:1fr 1fr; align-items:start; margin-top:18px;">
+      <div class="card">
+        <div class="section-title">Channel plan — ${fmtRange(state.weekStart)}</div>
+        ${renderChannelPlan(scheduledWeek)}
+      </div>
+      <div class="card">
+        <div class="section-title">This week's balance</div>
+        ${scheduledWeek.length? renderBalanceChart(balance) : '<p style="color:var(--ink-muted); font-size:13px;">Nothing scheduled this week yet.</p>'}
       </div>
     </div>
   `;

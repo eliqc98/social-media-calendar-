@@ -23,6 +23,9 @@
     --p-lifestyle:#c9403f;      --p-lifestyle-tint:#fae3e2;
 
     --obj-growth:#2a78d6; --obj-orinti:#eb6834; --obj-eluk:#1baf7a;
+
+    /* single-hue ordinal ramp for the per-platform chart — always paired with a text label */
+    --plat-tiktok:#3f2a1c; --plat-reels:#6B4A33; --plat-instagram:#9c7350; --plat-linkedin:#c9a06c;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -44,6 +47,8 @@
       --p-lifestyle:#e66767;      --p-lifestyle-tint:#331917;
 
       --obj-growth:#3987e5; --obj-orinti:#d95926; --obj-eluk:#199e70;
+
+      --plat-tiktok:#6b4f2e; --plat-reels:#8f6c40; --plat-instagram:#b98f5c; --plat-linkedin:#d9b483;
     }
   }
   :root[data-theme="dark"]{
@@ -65,6 +70,8 @@
     --p-lifestyle:#e66767;      --p-lifestyle-tint:#331917;
 
     --obj-growth:#3987e5; --obj-orinti:#d95926; --obj-eluk:#199e70;
+
+    --plat-tiktok:#6b4f2e; --plat-reels:#8f6c40; --plat-instagram:#b98f5c; --plat-linkedin:#d9b483;
   }
 
   *{box-sizing:border-box;}
@@ -729,6 +736,32 @@ function renderBalanceChart(balance){
   `;
 }
 
+function computePlatformBalance(items){
+  const total = items.length || 1;
+  return PLATFORMS.map(p=>{
+    const count = items.filter(i=>i.platform===p.id).length;
+    return { ...p, count, pct: Math.round((count/total)*100) };
+  });
+}
+
+function renderPlatformBalanceChart(items){
+  const balance = computePlatformBalance(items);
+  const present = balance.filter(p=>p.count>0);
+  const segs = present.map(p=>`<div class="balance-seg" style="width:${p.pct}%; background:var(--plat-${p.id})" title="${esc(p.label)}: ${p.count} post${p.count===1?'':'s'} (${p.pct}%)"></div>`).join('');
+  const legend = balance.map(p=>`<div class="item"><span class="swatch" style="background:var(--plat-${p.id})"></span>${esc(p.label)} — ${p.count}</div>`).join('');
+  const rows = balance.map(p=>`
+    <div class="balance-row">
+      <div class="name"><span class="swatch" style="background:var(--plat-${p.id})"></span>${esc(p.label)}</div>
+      <div class="pct">${p.count} post${p.count===1?'':'s'}</div>
+      <span class="status-chip" style="background:var(--accent-tint); color:var(--ink-2);">${p.pct}%</span>
+    </div>`).join('');
+  return `
+    <div class="balance-legend">${legend}</div>
+    <div class="balance-track">${segs}</div>
+    <div class="balance-readout">${rows}</div>
+  `;
+}
+
 function computeChannelPlan(scheduledWeek){
   return WEEKLY_PLAN.map(req=>{
     const platforms = CHANNELS[req.channel].platforms;
@@ -781,7 +814,6 @@ function renderCalendar(){
   const days = [0,1,2,3,4,5,6].map(n=>addDays(state.weekStart,n));
   const dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const scheduledWeek = state.ideas.filter(i=>i.date && i.date>=state.weekStart && i.date<=addDays(state.weekStart,6));
-  const balance = computeBalance(scheduledWeek);
 
   document.getElementById('main').innerHTML = `
     <div class="page-head">
@@ -804,8 +836,8 @@ function renderCalendar(){
         ${renderChannelPlan(scheduledWeek)}
       </div>
       <div class="card">
-        <div class="section-title">This week's balance</div>
-        ${scheduledWeek.length? renderBalanceChart(balance) : '<p style="color:var(--ink-muted); font-size:13px;">Nothing scheduled this week yet.</p>'}
+        <div class="section-title">This week's balance — by platform</div>
+        ${scheduledWeek.length? renderPlatformBalanceChart(scheduledWeek) : '<p style="color:var(--ink-muted); font-size:13px;">Nothing scheduled this week yet.</p>'}
       </div>
     </div>
   `;

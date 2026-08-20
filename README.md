@@ -12,10 +12,11 @@ Content is planned per channel, 6 posts a week total:
 
 | Channel | Cadence | Slots |
 |---|---|---|
-| **LinkedIn** | 3 posts/week | 2× Orinti (marketing agency) + 1× **your choice**: Empower LATAM UK (social impact) or personal growth (Mindset) |
+| **LinkedIn** | 1 post/week | **Your choice**: Empower LATAM UK (social impact) or personal growth (Mindset) |
 | **Instagram + TikTok** | 3 posts/week, cross-posted | 1× financial literacy, 1× skill (tech/AI/business), 1× entrepreneurship & career — all educational |
+| **Orinti** | 2 posts/week, any platform | Founder journey and client work — LinkedIn, TikTok, or Instagram, whichever fits the post |
 
-The third LinkedIn slot isn't locked to one or the other — Batch Prep offers separate "from idea bank" / "new idea" buttons for each option, so you pick whichever fits that week. The 59% Growth / 33% Orinti / 8% ELUK objective-balance target on the dashboard assumes that choice runs roughly even over time; ELUK's real share will track however often you actually pick it.
+The LinkedIn slot isn't locked to one option — Batch Prep offers separate "from idea bank" / "new idea" buttons for Empower LATAM UK and personal growth, so you pick whichever fits that week. Orinti is its own channel rather than folded into LinkedIn, since agency content isn't limited to one platform. The 59% Growth / 33% Orinti / 8% ELUK objective-balance target on the dashboard assumes the LinkedIn choice runs roughly even over time; ELUK's real share will track however often you actually pick it.
 
 ## What's inside
 

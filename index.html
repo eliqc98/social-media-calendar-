@@ -166,6 +166,7 @@
   .prep-channel{ margin-top:24px; }
   .prep-channel:first-of-type{ margin-top:0; }
   .prep-channel-title{ font-size:16px; margin-bottom:12px; }
+  .prep-channel-note{ font-size:12px; font-weight:500; color:var(--ink-muted); font-family:"Public Sans", sans-serif; }
   .prep-slots{ display:grid; gap:14px; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); align-items:start; }
   .prep-card{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px; }
   .prep-card.empty{ border-style:dashed; justify-content:center; align-items:flex-start; min-height:120px; gap:10px; }
@@ -343,7 +344,7 @@ const OBJECTIVES = [
   { id:'growth', label:'Audience Growth — Personal Brand', short:'Growth', target:59, colorVar:'--obj-growth',
     blurb:'3 educational cross-posts a week on Instagram + TikTok, plus personal-growth LinkedIn posts when that slot goes to Mindset.' },
   { id:'orinti', label:'Orinti — Founder / Agency', short:'Orinti', target:33, colorVar:'--obj-orinti',
-    blurb:'2 LinkedIn posts a week on the agency — founder journey and client work.' },
+    blurb:'2 posts a week on the agency — founder journey and client work, on whichever platform fits.' },
   { id:'eluk',   label:'Empower LATAM UK — Impact', short:'ELUK', target:8, colorVar:'--obj-eluk',
     blurb:'A LinkedIn post carrying the Empower LATAM UK impact story, roughly every other week.' },
 ];
@@ -367,11 +368,14 @@ function normalizePlatforms(list){
   return PLATFORMS.map(p=>p.id).filter(id=>set.has(id));
 }
 
-// Channels group platforms for weekly-plan purposes: Instagram + TikTok are
-// planned as one cross-posted educational slate; LinkedIn is planned on its own.
+// Channels group platforms for weekly-plan purposes. Instagram + TikTok are
+// planned as one cross-posted educational slate; LinkedIn is planned on its
+// own; Orinti is its own channel on top of both — it isn't tied to one
+// platform, so an Orinti post can go on LinkedIn, TikTok, or Instagram.
 const CHANNELS = {
-  linkedin: { id:'linkedin', label:'LinkedIn', sub:'3 posts/week — 2 Orinti + 1 personal growth or ELUK', platforms:['linkedin'] },
+  linkedin: { id:'linkedin', label:'LinkedIn', sub:'1 post/week — personal growth or ELUK', platforms:['linkedin'] },
   social:   { id:'social',   label:'Instagram + TikTok', sub:'3 posts/week, cross-posted — all educational', platforms:['tiktok','instagram'] },
+  orinti:   { id:'orinti',   label:'Orinti', sub:'2 posts/week — any platform: LinkedIn, TikTok, or Instagram', platforms:['linkedin','tiktok','instagram'] },
 };
 
 const FORMATS = [
@@ -407,8 +411,8 @@ const LANGS = [
 // whichever you pick.
 function getWeeklyPlan(weekStart){
   return [
-    { id:'li-orinti', channel:'linkedin', pillar:'orinti', need:2, label:'Orinti — marketing agency' },
     { id:'li-alt',    channel:'linkedin', pillar:['mindset','eluk'], need:1, label:'Personal growth or ELUK' },
+    { id:'or-orinti', channel:'orinti', pillar:'orinti', need:2, label:'Orinti — marketing agency' },
     { id:'so-money',  channel:'social', pillar:'money',   need:1, label:'Financial literacy' },
     { id:'so-skill',  channel:'social', pillar:'studies', need:1, label:'Skill — tech / AI / business' },
     { id:'so-career', channel:'social', pillar:'career',  need:1, label:'Entrepreneurship & career' },
@@ -906,7 +910,7 @@ function renderChannelPlan(scheduledWeek, weekStart){
         </div>
       </div>`;
   };
-  return section('linkedin') + section('social');
+  return Object.keys(CHANNELS).map(section).join('');
 }
 
 /* ============================= CALENDAR ============================= */
@@ -1022,6 +1026,10 @@ function renderProduction(){
     <div class="prep-channel">
       <h3 class="prep-channel-title">Instagram + TikTok</h3>
       <div class="prep-slots">${renderPrepSlots(plan.filter(p=>p.channel==='social'))}</div>
+    </div>
+    <div class="prep-channel">
+      <h3 class="prep-channel-title">Orinti <span class="prep-channel-note">— any platform</span></h3>
+      <div class="prep-slots">${renderPrepSlots(plan.filter(p=>p.channel==='orinti'))}</div>
     </div>
     ${leftovers.length ? `
     <div class="prep-channel">

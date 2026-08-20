@@ -145,6 +145,14 @@
   .channel-head{ display:flex; align-items:baseline; justify-content:space-between; font-size:14px; }
   .channel-sub{ font-size:12px; color:var(--ink-muted); font-weight:600; font-variant-numeric:tabular-nums; }
   .checklist{ display:grid; gap:10px; margin-top:8px; }
+  .mini-list{ list-style:none; margin:8px 0 0; padding:0; display:grid; gap:4px; }
+  .mini-item{
+    display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-2);
+    padding:5px 7px; border-radius:7px; cursor:pointer; background:var(--surface-raised); border:1px solid var(--border);
+  }
+  .mini-item:hover{ background:var(--accent-tint); }
+  .mini-when{ flex:none; color:var(--ink-muted); font-weight:600; font-variant-numeric:tabular-nums; }
+  .mini-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-weight:500; }
   .check-item{ display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:13.5px; }
   .check-item .dot{ width:20px; height:20px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
   .check-item.met .dot{ background:var(--good-tint); color:var(--good); }
@@ -170,8 +178,16 @@
   .day-items{ display:flex; flex-direction:column; gap:6px; flex:1; }
   .idea-chip{ border:1px solid var(--border); border-left:3px solid var(--chip-color,var(--accent)); border-radius:8px; padding:6px 8px; font-size:12.5px; cursor:pointer; background:var(--surface-raised); }
   .idea-chip:hover{ background:var(--accent-tint); }
+  .idea-chip-top{ display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:3px; }
+  .idea-chip .plat{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-2); }
   .idea-chip .t{ font-weight:600; display:block; margin-bottom:2px; }
   .idea-chip .meta{ color:var(--ink-muted); font-size:11px; }
+  .chip-remove{
+    flex:none; width:18px; height:18px; line-height:16px; text-align:center; padding:0;
+    border:1px solid transparent; border-radius:50%; background:transparent; color:var(--ink-muted);
+    font-size:14px; cursor:pointer;
+  }
+  .chip-remove:hover{ background:var(--critical-tint); color:var(--critical); border-color:var(--critical); }
   .day-add{ border:1px dashed var(--border); border-radius:8px; background:transparent; color:var(--ink-muted); font-size:12px; padding:6px; cursor:pointer; font-weight:600; }
   .day-add:hover{ color:var(--ink); border-color:var(--accent); }
   .day-empty{ color:var(--ink-muted); font-size:12px; font-style:italic; }
@@ -595,6 +611,23 @@ function objectivePill(objId){
 }
 function outlinePill(label){ return '<span class="pill pill-outline">'+esc(label)+'</span>'; }
 
+// Shared click wiring for anything that represents a scheduled idea:
+// day-card chips and the mini item lists inside the channel-plan checklist.
+// Clicking the item opens it for editing; the × removes it from the
+// calendar (unschedules it, keeps it in the bank) without opening anything.
+function bindChipInteractions(){
+  document.querySelectorAll('.idea-chip, .mini-item').forEach(el=>{
+    el.addEventListener('click', ()=> openIdeaModal(el.dataset.id));
+  });
+  document.querySelectorAll('.chip-remove').forEach(el=>{
+    el.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const idea = state.ideas.find(i=>i.id===el.dataset.unscheduleChip);
+      if(idea){ idea.date=null; save(); render(); toast('Removed from calendar — back in the bank'); }
+    });
+  });
+}
+
 /* ============================= NAV ============================= */
 function renderNav(){
   document.querySelectorAll('.nav-tab').forEach(btn=>{
@@ -667,6 +700,7 @@ function renderDashboard(){
   `;
 
   document.querySelector('[data-action="goto-calendar"]')?.addEventListener('click', ()=>{ state.view='calendar'; save(); render(); });
+  bindChipInteractions();
 }
 
 function renderBalanceChart(balance){
@@ -698,9 +732,19 @@ function renderBalanceChart(balance){
 function computeChannelPlan(scheduledWeek){
   return WEEKLY_PLAN.map(req=>{
     const platforms = CHANNELS[req.channel].platforms;
-    const got = scheduledWeek.filter(i=> i.pillar===req.pillar && platforms.includes(i.platform)).length;
-    return { ...req, got, met: got>=req.need };
+    const matches = scheduledWeek
+      .filter(i=> i.pillar===req.pillar && platforms.includes(i.platform))
+      .sort((a,b)=> a.date.localeCompare(b.date));
+    return { ...req, got:matches.length, met: matches.length>=req.need, matches };
   });
+}
+
+function miniItemRow(idea){
+  return `<li class="mini-item" data-id="${idea.id}">
+    <span class="mini-when">${esc(fmtDay(idea.date))}</span>
+    <span class="mini-title">${esc(idea.title)}</span>
+    <button class="chip-remove" data-unschedule-chip="${idea.id}" title="Remove from ${esc(fmtDay(idea.date))} — back to bank" aria-label="Remove from this day">×</button>
+  </li>`;
 }
 
 function renderChannelPlan(scheduledWeek){
@@ -721,7 +765,10 @@ function renderChannelPlan(scheduledWeek){
           ${items.map(it=>`
             <div class="check-item ${it.met?'met':'unmet'}">
               <div class="dot">${it.met?'✓':'!'}</div>
-              <div class="txt"><b>${esc(it.label)}</b><br><span>${it.got}/${it.need} scheduled</span></div>
+              <div class="txt">
+                <b>${esc(it.label)}</b><br><span>${it.got}/${it.need} scheduled</span>
+                ${it.matches.length ? `<ul class="mini-list">${it.matches.map(miniItemRow).join('')}</ul>` : ''}
+              </div>
             </div>`).join('')}
         </div>
       </div>`;
@@ -767,9 +814,7 @@ function renderCalendar(){
   document.getElementById('cal-next').addEventListener('click', ()=>{ state.weekStart=addDays(state.weekStart,7); save(); render(); });
   document.getElementById('cal-today').addEventListener('click', ()=>{ state.weekStart=mondayOf(todayISO()); save(); render(); });
 
-  document.querySelectorAll('.idea-chip').forEach(el=>{
-    el.addEventListener('click', ()=> openIdeaModal(el.dataset.id));
-  });
+  bindChipInteractions();
   document.querySelectorAll('.day-add[data-mode="new"]').forEach(el=>{
     el.addEventListener('click', ()=> openIdeaModal(null, el.dataset.date));
   });
@@ -787,8 +832,12 @@ function renderDayCard(iso, dow){
       <div class="day-items">
         ${items.length ? items.map(i=>`
           <div class="idea-chip" data-id="${i.id}" style="--chip-color:var(--p-${i.pillar})">
+            <div class="idea-chip-top">
+              <span class="plat">${esc(PLATFORM_MAP[i.platform].label)}</span>
+              <button class="chip-remove" data-unschedule-chip="${i.id}" title="Remove from ${esc(dow)} — back to bank" aria-label="Remove from this day">×</button>
+            </div>
             <span class="t">${esc(i.title)}</span>
-            <span class="meta">${esc(FORMAT_MAP[i.format].label)} · ${esc(PLATFORM_MAP[i.platform].label)}</span>
+            <span class="meta">${esc(PILLAR_MAP[i.pillar].label)} · ${esc(FORMAT_MAP[i.format].label)}</span>
           </div>`).join('') : '<div class="day-empty">Nothing yet</div>'}
       </div>
       <button class="day-add" data-mode="pick" data-date="${iso}">+ From idea bank</button>
@@ -920,7 +969,10 @@ function openIdeaModal(id, presetDate){
           <textarea id="m-notes" placeholder="Talking points, hook, references…">${esc(idea.notes||'')}</textarea>
         </div>
         <div class="modal-foot">
-          <div>${editing? `<button class="btn btn-danger" id="m-delete">Delete</button>` : ''}</div>
+          <div style="display:flex; gap:8px;">
+            ${editing? `<button class="btn btn-danger" id="m-delete">Delete</button>` : ''}
+            ${editing && idea.date? `<button class="btn" id="m-unschedule">Remove from calendar</button>` : ''}
+          </div>
           <div style="display:flex; gap:8px;">
             <button class="btn" id="m-cancel">Cancel</button>
             <button class="btn btn-primary" id="m-save">${editing?'Save changes':'Add to bank'}</button>
@@ -933,6 +985,9 @@ function openIdeaModal(id, presetDate){
   document.getElementById('m-cancel').addEventListener('click', closeModal);
   document.getElementById('m-delete')?.addEventListener('click', ()=>{
     if(confirm('Delete this idea?')){ state.ideas = state.ideas.filter(i=>i.id!==idea.id); save(); closeModal(); render(); toast('Idea deleted'); }
+  });
+  document.getElementById('m-unschedule')?.addEventListener('click', ()=>{
+    idea.date = null; save(); closeModal(); render(); toast('Removed from calendar — back in the bank');
   });
   document.getElementById('m-save').addEventListener('click', ()=>{
     const title = document.getElementById('m-title').value.trim();

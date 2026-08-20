@@ -623,7 +623,16 @@ const STORAGE_KEY = 'contentEcosystemCalendar.v1';
 
 function pad(n){ return n<10 ? '0'+n : ''+n; }
 function toISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
-function fromISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+// Defensive on purpose: bad/missing input (corrupt or pre-migration saved
+// data) must never throw here — everything downstream (a whole render pass)
+// depends on these. Falls back to "today" rather than producing NaN dates
+// that would silently propagate and eventually crash something far away.
+function fromISO(s){
+  if(typeof s!=='string') return new Date();
+  const [y,m,d]=s.split('-').map(Number);
+  const dt = new Date(y,(m-1)||0,d||1);
+  return isNaN(dt.getTime()) ? new Date() : dt;
+}
 function todayISO(){ return toISO(new Date()); }
 function mondayOf(iso){
   const d = fromISO(iso);
@@ -653,12 +662,25 @@ function defaultState(){
 
 // Brings ideas saved by an older version of this app (single `platform`
 // string, or the now-retired 'reels' id) up to the current `platforms` array
-// shape, so a saved session never crashes on load after an update.
+// shape, and guards every field against unknown/corrupt values, so a saved
+// session never crashes the whole app on load after an update.
 function migrateIdea(idea){
+  if(!idea || typeof idea!=='object') idea = {};
   let list = idea.platforms || (idea.platform ? [idea.platform] : ['tiktok']);
-  list = list.map(p=> p==='reels' ? 'instagram' : p);
-  idea.platforms = normalizePlatforms(list);
+  if(!Array.isArray(list) || !list.length) list = ['tiktok'];
+  list = list.map(p=> p==='reels' ? 'instagram' : p).filter(p=>PLATFORM_MAP[p]);
+  idea.platforms = normalizePlatforms(list.length ? list : ['tiktok']);
   delete idea.platform;
+
+  if(!idea.id) idea.id = newId();
+  if(typeof idea.title!=='string') idea.title = '';
+  if(!PILLAR_MAP[idea.pillar]) idea.pillar = 'career';
+  if(!FORMAT_MAP[idea.format]) idea.format = 'teaching';
+  if(!STATUS_MAP[idea.status]) idea.status = 'idea';
+  if(!LANGS.some(l=>l.id===idea.language)) idea.language = 'ES';
+  if(typeof idea.date!=='string') idea.date = null;
+  if(typeof idea.prepDate!=='string') idea.prepDate = null;
+  if(typeof idea.notes!=='string') idea.notes = '';
   return idea;
 }
 
@@ -1508,12 +1530,39 @@ document.getElementById('btn-reset').addEventListener('click', ()=>{
 });
 
 /* ============================= RENDER DISPATCH ============================= */
+// A view throwing mid-render must never leave the page blank with no
+// explanation — that's indistinguishable from "broken" and unrecoverable
+// without opening dev tools. Show the actual error and a way out instead.
 function render(){
-  renderNav();
-  if(state.view==='calendar') renderCalendar();
-  else if(state.view==='bank') renderBank();
-  else if(state.view==='production') renderProduction();
-  else renderDashboard();
+  try{
+    renderNav();
+    if(state.view==='calendar') renderCalendar();
+    else if(state.view==='bank') renderBank();
+    else if(state.view==='production') renderProduction();
+    else renderDashboard();
+  }catch(err){
+    console.error('Render failed:', err);
+    document.getElementById('main').innerHTML = `
+      <div class="page-head">
+        <div class="eyebrow">Something went wrong</div>
+        <h2>This view hit an error</h2>
+        <p>${esc(err && err.message ? err.message : String(err))}</p>
+      </div>
+      <div class="card" style="display:flex; flex-direction:column; gap:12px; align-items:flex-start;">
+        <p style="color:var(--ink-2); font-size:13.5px; margin:0;">This is usually caused by unexpected saved data. Try another tab first — if only one view is broken, your data is fine. Back up with <b>Export JSON</b> in the sidebar before resetting, just in case.</p>
+        <div style="display:flex; gap:8px;">
+          <button class="btn" data-action="err-dashboard">Go to Dashboard</button>
+          <button class="btn btn-danger" data-action="err-reset">Reset to starter ideas</button>
+        </div>
+      </div>
+    `;
+    document.querySelector('[data-action="err-dashboard"]')?.addEventListener('click', ()=>{ state.view='dashboard'; save(); render(); });
+    document.querySelector('[data-action="err-reset"]')?.addEventListener('click', ()=>{
+      if(confirm('Replace ALL current ideas with the starter content bank? This cannot be undone.')){
+        state = defaultState(); save(); render(); toast('Reset to starter ideas');
+      }
+    });
+  }
 }
 render();
 </script>

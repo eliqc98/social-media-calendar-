@@ -982,6 +982,23 @@ function renderDayCard(iso, dow){
   `;
 }
 
+// If the viewed prep week is empty, find the nearest week (by date distance)
+// that actually has something prepped, so an empty week reads as "nothing
+// scheduled here yet" rather than "the page is broken."
+function nearestPrepWeek(weekStart){
+  let best = null, bestDiff = Infinity;
+  const target = fromISO(weekStart).getTime();
+  state.ideas.forEach(i=>{
+    const pd = prepDateValue(i);
+    if(!pd) return;
+    const ws = mondayOf(pd);
+    if(ws===weekStart) return;
+    const diff = Math.abs(fromISO(ws).getTime() - target);
+    if(diff < bestDiff){ bestDiff = diff; best = ws; }
+  });
+  return best;
+}
+
 /* ============================= PRODUCTION / BATCH PREP =============================
    Friday: brainstorm, pick next week's lineup, write every script here.
    Monday: work down the list and record — mark each one off as you go. */
@@ -998,6 +1015,7 @@ function renderProduction(){
   const posted = weekItems.filter(i=>i.status==='posted').length;
   const totalNeed = getWeeklyPlan(state.weekStart).reduce((a,r)=>a+r.need,0);
   const slotsFilled = plan.reduce((a,r)=>a+Math.min(r.got,r.need),0);
+  const nearestWeek = weekItems.length===0 ? nearestPrepWeek(state.weekStart) : null;
 
   document.getElementById('main').innerHTML = `
     <div class="page-head">
@@ -1011,6 +1029,11 @@ function renderProduction(){
       <button class="btn" id="prep-next">Next week →</button>
       <div class="range">Prepping ${fmtRange(state.weekStart)}</div>
     </div>
+    ${nearestWeek ? `
+    <div class="card" style="margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; background:var(--accent-tint); border-color:var(--accent);">
+      <span style="font-size:13.5px; color:var(--ink);">Nothing prepped for this week yet — but you've got content prepped for <b>${esc(fmtRange(nearestWeek))}</b>.</span>
+      <button class="btn btn-primary btn-sm" id="prep-jump-nearest" data-week="${nearestWeek}">Jump there →</button>
+    </div>` : ''}
 
     <div class="grid stat-row">
       <div class="card stat-tile"><div class="label">Slots filled</div><div class="value">${slotsFilled}/${totalNeed}</div><div class="sub">to prep this week</div></div>
@@ -1123,6 +1146,9 @@ function emptySlotCard(req, label){
 function bindProductionInteractions(){
   bindChipInteractions(); // wires the × (unschedule) buttons on prep cards too
 
+  document.getElementById('prep-jump-nearest')?.addEventListener('click', function(){
+    state.weekStart = this.dataset.week; save(); render();
+  });
   document.querySelectorAll('.prep-title[data-open]').forEach(el=>{
     el.addEventListener('click', ()=> openIdeaModal(el.dataset.open));
   });

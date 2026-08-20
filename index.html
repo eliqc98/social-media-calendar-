@@ -179,7 +179,6 @@
   .prep-date-field{ display:flex; align-items:center; gap:7px; margin:0; }
   .prep-date-field span{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; font-weight:700; color:var(--ink-muted); margin:0; }
   .prep-date-field input{ width:132px; font-size:12px; padding:5px 7px; }
-  .prep-posts-on{ font-size:12px; color:var(--ink-muted); }
   .script-box{ width:100%; min-height:130px; font-size:13.5px; line-height:1.6; font-family:inherit; }
   .status-seg{ display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; align-self:flex-start; }
   .status-seg button{ border:none; background:var(--surface-raised); padding:6px 10px; font-size:11px; font-weight:700; color:var(--ink-2); cursor:pointer; }
@@ -1083,7 +1082,10 @@ function prepCard(idea, slotLabel){
           <span>Prep day</span>
           <input type="date" class="prep-when" data-id="${idea.id}" value="${prepDateValue(idea)}" title="When you'll write/record this — independent of the post date">
         </label>
-        <span class="prep-posts-on" title="Set from Calendar or the full editor">Posts ${idea.date ? esc(fmtDay(idea.date)) : '—'}</span>
+        <label class="prep-date-field">
+          <span>Posts</span>
+          <input type="date" class="prep-posts" data-id="${idea.id}" value="${idea.date||''}" title="The Calendar/publish date — independent of the prep day">
+        </label>
       </div>
       <div class="status-seg" data-id="${idea.id}">
         ${STATUSES.map(s=>`<button data-set-status="${s.id}" class="${idea.status===s.id?'active':''}">${esc(s.label)}</button>`).join('')}
@@ -1120,6 +1122,18 @@ function bindProductionInteractions(){
     el.addEventListener('change', ()=>{
       const idea = state.ideas.find(i=>i.id===el.dataset.id);
       if(idea){ idea.prepDate = el.value || null; save(); render(); }
+    });
+  });
+  document.querySelectorAll('.prep-posts').forEach(el=>{
+    el.addEventListener('change', ()=>{
+      const idea = state.ideas.find(i=>i.id===el.dataset.id);
+      if(!idea) return;
+      if(!el.value){ toast("Posts date can't be empty — unschedule from the ✕ instead"); el.value = idea.date; return; }
+      // Lock in whatever prep day was showing before moving the post day —
+      // otherwise the un-set prep day's "1 week before" default would silently
+      // drift with it, and the card could jump out of the week you're viewing.
+      if(!idea.prepDate) idea.prepDate = prepDateValue(idea);
+      idea.date = el.value; save(); render(); toast('Post date updated');
     });
   });
   document.querySelectorAll('.status-seg [data-set-status]').forEach(el=>{

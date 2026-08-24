@@ -116,6 +116,14 @@
   .nav-tab[aria-current="true"] .count.count-attn{ background:var(--surface); color:var(--critical); }
   .rail-foot{ margin-top:auto; padding:10px; display:flex; flex-direction:column; gap:8px; }
   .rail-foot button{ font-size:12px; }
+  .recovery-card{
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    margin-bottom:18px; background:var(--warning-tint); border-color:var(--warning);
+  }
+  .recovery-card p{ margin:4px 0 0; font-size:13px; color:var(--ink-2); max-width:62ch; }
+  .recovery-card b{ font-size:14px; }
+  .recovery-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
   .sync-status{
     font-size:11px; font-weight:600; color:var(--ink-muted); display:flex; align-items:center; gap:6px;
     padding:2px 2px 6px;
@@ -715,20 +723,60 @@ function migrateIdea(idea){
   return idea;
 }
 
+// Does a saved state contain real work, as opposed to an untouched seed bank?
+// Used to decide whether losing it would actually cost the user something.
+function hasUserWork(st){
+  if(!st || !Array.isArray(st.ideas)) return false;
+  return st.ideas.some(i => i && (
+    i.date || i.prepDate || (i.notes||'').trim() ||
+    (i.status && i.status!=='idea') || !String(i.id||'').startsWith('seed-')
+  ));
+}
+function countUserWork(st){
+  if(!st || !Array.isArray(st.ideas)) return 0;
+  return st.ideas.filter(i => i && (
+    i.date || i.prepDate || (i.notes||'').trim() ||
+    (i.status && i.status!=='idea') || !String(i.id||'').startsWith('seed-')
+  )).length;
+}
+
 // Boot picks whichever of "this browser's local copy" and "the cloud copy
 // baked into this page" is newer, by updatedAt — plain last-write-wins, which
 // is the right amount of cleverness for one person editing from at most a
 // couple of devices, never truly concurrently.
+//
+// The one case timestamps CANNOT decide: a local copy written before sync
+// existed has no updatedAt at all, so it would always score 0 and lose to any
+// cloud copy — silently discarding real work. So whenever the copy we don't
+// use contains actual work, it is stashed under a backup key and offered back
+// rather than dropped. Losing user data to a merge rule is not acceptable.
+const BACKUP_KEY = STORAGE_KEY + '.superseded';
+let supersededState = null;
 let state;
 try{
   const raw = localStorage.getItem(STORAGE_KEY);
   const local = raw ? JSON.parse(raw) : null;
   const embedded = loadEmbeddedState();
-  if(embedded && (!local || (embedded.updatedAt||0) > (local.updatedAt||0))) state = embedded;
+  const localIsLegacy = !!(local && !local.updatedAt);
+  if(embedded && (!local || (embedded.updatedAt||0) > (local.updatedAt||0))){
+    state = embedded;
+    // The local copy lost. Keep it if it holds work the winner doesn't.
+    if(local && hasUserWork(local) && (localIsLegacy || countUserWork(local) > countUserWork(embedded))){
+      supersededState = local;
+      try{ localStorage.setItem(BACKUP_KEY, JSON.stringify(local)); }catch(e){}
+    }
+  }
   else if(local) state = local;
   else state = defaultState();
   if(!state.ideas || !state.ideas.length) state = defaultState();
   state.ideas = state.ideas.map(migrateIdea);
+  // A backup stashed on an earlier load is still on offer until dismissed.
+  if(!supersededState){
+    try{
+      const b = localStorage.getItem(BACKUP_KEY);
+      if(b){ const parsed = JSON.parse(b); if(hasUserWork(parsed)) supersededState = parsed; }
+    }catch(e){}
+  }
 } catch(e){ state = defaultState(); }
 
 function save(){
@@ -1692,6 +1740,53 @@ document.getElementById('btn-reset').addEventListener('click', ()=>{
   }
 });
 
+/* ============================= RECOVERY BANNER =============================
+   Shown when an older copy of this browser's data was set aside at boot
+   (typically data saved before cross-device sync existed, which has no
+   timestamp to compare). Offers it back rather than letting it die quietly. */
+function renderRecoveryBanner(){
+  const main = document.getElementById('main');
+  if(!main) return;
+  main.querySelector('#recovery-root')?.remove();
+  if(!supersededState) return;
+  // Each view replaces main's innerHTML, so the banner is injected after the
+  // view renders rather than living in the static markup.
+  const host = document.createElement('div');
+  host.id = 'recovery-root';
+  main.prepend(host);
+  const n = countUserWork(supersededState);
+  const total = (supersededState.ideas||[]).length;
+  host.innerHTML = `
+    <div class="card recovery-card">
+      <div>
+        <b>Earlier data found on this device</b>
+        <p>A copy saved in this browser has <b>${n}</b> item${n===1?'':'s'} with scheduling, scripts or edits (${total} ideas total) that isn't in your synced copy. It was set aside, not deleted.</p>
+      </div>
+      <div class="recovery-actions">
+        <button class="btn btn-sm" data-rec="download">Download it</button>
+        <button class="btn btn-primary btn-sm" data-rec="restore">Restore it</button>
+        <button class="btn btn-ghost btn-sm" data-rec="dismiss">Dismiss</button>
+      </div>
+    </div>`;
+  host.querySelector('[data-rec="download"]').addEventListener('click', ()=>{
+    saveFile('content-ecosystem-recovered.json', JSON.stringify(supersededState.ideas||[], null, 2), 'application/json');
+  });
+  host.querySelector('[data-rec="restore"]').addEventListener('click', ()=>{
+    if(!confirm('Restore this earlier copy? Your current view will be replaced by it. The copy you have now is exported first if you cancel.')) return;
+    state = supersededState;
+    state.ideas = (state.ideas||[]).map(migrateIdea);
+    supersededState = null;
+    try{ localStorage.removeItem(BACKUP_KEY); }catch(e){}
+    save(); render(); toast('Earlier data restored');
+  });
+  host.querySelector('[data-rec="dismiss"]').addEventListener('click', ()=>{
+    if(!confirm('Dismiss this earlier copy? Download it first if you might want it — this removes the offer.')) return;
+    supersededState = null;
+    try{ localStorage.removeItem(BACKUP_KEY); }catch(e){}
+    renderRecoveryBanner(); toast('Dismissed');
+  });
+}
+
 /* ============================= RENDER DISPATCH ============================= */
 // A view throwing mid-render must never leave the page blank with no
 // explanation — that's indistinguishable from "broken" and unrecoverable
@@ -1703,6 +1798,7 @@ function render(){
     else if(state.view==='bank') renderBank();
     else if(state.view==='production') renderProduction();
     else renderDashboard();
+    renderRecoveryBanner();
   }catch(err){
     console.error('Render failed:', err);
     document.getElementById('main').innerHTML = `

@@ -29,7 +29,14 @@ The LinkedIn slot isn't locked to one option — Batch Prep offers separate "fro
   **Batch Prep is organized by prep day, Calendar by post day** — they're deliberately different clocks, but both are editable right on the card: **Prep day** drives which week it shows up in Batch Prep; **Posts** is the Calendar/publish date. Changing one never silently drags the other — editing Posts locks the prep day in place first, so the card doesn't jump out of the week you're looking at. Picking or adding something from an empty slot sets its prep day to the week you're viewing and defaults its post day one week later, matching a prep-one-week-ahead rhythm — so "this week" in Batch Prep is naturally "next week" on the Calendar.
 - **Idea Bank** — 165 seeded ideas pulled from Elizabeth's own notes, tagged by pillar, objective, platform, format, language, and production status. Filterable, editable, exportable.
 
-Data is stored in your browser's local storage — nothing leaves your device. Use **Export JSON** to back up, **Import JSON** to restore, or **Export CSV** to hand the plan to someone else (e.g. an editor or VA).
+## Where your data lives
+
+Two layers, and the sidebar shows which one is active:
+
+- **This browser (always).** Every change saves to `localStorage` immediately, so the app stays instant and works offline.
+- **Your claude.ai account (when running as a published Artifact).** Changes are batched and republished as a new version of the same artifact with your data baked into it, so opening the same link on another device — or after clearing this browser — picks up your real data instead of the starter set. The sidebar reads **"Synced to your account"** when this is on.
+
+Opened as a plain file or from a static host, there's no account to sync to, so it falls back to browser-only and the sidebar says **"Saved on this device only"**. Either way, **Export JSON** gives you a full portable backup and **Import JSON** restores it; **Export CSV** is for handing the plan to someone else (an editor or VA) — only JSON round-trips losslessly.
 
 ## Running it
 

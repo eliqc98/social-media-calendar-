@@ -116,6 +116,15 @@
   .nav-tab[aria-current="true"] .count.count-attn{ background:var(--surface); color:var(--critical); }
   .rail-foot{ margin-top:auto; padding:10px; display:flex; flex-direction:column; gap:8px; }
   .rail-foot button{ font-size:12px; }
+  .sync-status{
+    font-size:11px; font-weight:600; color:var(--ink-muted); display:flex; align-items:center; gap:6px;
+    padding:2px 2px 6px;
+  }
+  .sync-status .dot{ width:6px; height:6px; border-radius:50%; flex:none; background:var(--ink-muted); }
+  .sync-status.synced .dot{ background:var(--good); }
+  .sync-status.syncing .dot{ background:var(--warning); }
+  .sync-status.local-only .dot{ background:var(--ink-muted); }
+  .sync-status.error .dot{ background:var(--critical); }
 
   main{ padding:28px 32px 80px; max-width:1180px; }
   @media (max-width:640px){ main{ padding:18px 16px 60px; } }
@@ -302,6 +311,7 @@
     <button class="nav-tab" data-view="production">Batch Prep<span class="count" id="nav-count-production"></span></button>
     <button class="nav-tab" data-view="bank">Idea Bank<span class="count" id="nav-count-bank"></span></button>
     <div class="rail-foot">
+      <div class="sync-status" id="sync-status" title="">Checking sync…</div>
       <button class="btn btn-ghost" id="btn-export">Export JSON</button>
       <button class="btn btn-ghost" id="btn-import">Import JSON</button>
       <input type="file" id="file-import" accept="application/json" class="visually-hidden">
@@ -314,6 +324,11 @@
 
 <div id="modal-root"></div>
 <div id="toast-root"></div>
+<!-- Cross-device sync: the app's own JS rewrites this block's contents to the
+     current app state and republishes itself via the artifact capability, so
+     opening this same link elsewhere boots from here instead of the starter
+     seed. Never edit by hand. -->
+<script id="embedded-state" type="application/json">null</script>
 
 <script>
 /* ============================= DATA MODEL ============================= */
@@ -657,7 +672,21 @@ function defaultState(){
     view: 'dashboard',
     weekStart: mondayOf(todayISO()),
     filters: { pillar:'', objective:'', platform:'', format:'', status:'', language:'', unscheduledOnly:false, q:'' },
+    updatedAt: 0,
   };
+}
+
+// The cloud copy embedded in this page's own served source (see the
+// #embedded-state tag at the end of body). Present once this same link has
+// been opened, edited, and synced from any device — absent on a totally
+// fresh artifact. Never edited by hand; only this app's own sync code writes it.
+function loadEmbeddedState(){
+  const el = document.getElementById('embedded-state');
+  if(!el || !el.textContent) return null;
+  try{
+    const parsed = JSON.parse(el.textContent);
+    return (parsed && Array.isArray(parsed.ideas)) ? parsed : null;
+  }catch(e){ return null; }
 }
 
 // Brings ideas saved by an older version of this app (single `platform`
@@ -684,15 +713,126 @@ function migrateIdea(idea){
   return idea;
 }
 
+// Boot picks whichever of "this browser's local copy" and "the cloud copy
+// baked into this page" is newer, by updatedAt — plain last-write-wins, which
+// is the right amount of cleverness for one person editing from at most a
+// couple of devices, never truly concurrently.
 let state;
 try{
   const raw = localStorage.getItem(STORAGE_KEY);
-  state = raw ? JSON.parse(raw) : defaultState();
+  const local = raw ? JSON.parse(raw) : null;
+  const embedded = loadEmbeddedState();
+  if(embedded && (!local || (embedded.updatedAt||0) > (local.updatedAt||0))) state = embedded;
+  else if(local) state = local;
+  else state = defaultState();
   if(!state.ideas || !state.ideas.length) state = defaultState();
   state.ideas = state.ideas.map(migrateIdea);
 } catch(e){ state = defaultState(); }
 
-function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function save(){
+  state.updatedAt = Date.now();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  scheduleCloudSync();
+}
+
+/* ============================= CROSS-DEVICE SYNC =============================
+   localStorage stays the fast, always-on copy — every save() writes it
+   immediately, so typing, clicking, everything feels instant regardless of
+   network. On top of that, changes are batched and republished as a new
+   version of this same artifact with the current state baked into its
+   #embedded-state tag, so opening this same link on another device (or after
+   clearing this one's browser data) boots from your real data instead of the
+   starter seed. Never on every keystroke — publish() reloads the view that
+   calls it, and the runtime asks callers to batch. */
+const SYNC_DEBOUNCE_MS = 10000;
+let artifactCap = null;      // claude.use('artifact') namespace, once resolved; null = unavailable
+let artifactWritable = true; // flips false permanently on not_writer/not_granted for this view
+let syncTimer = null;
+let syncInFlight = false;
+
+function setSyncStatus(mode, detail){
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  el.className = 'sync-status '+mode;
+  el.title = detail || '';
+  const labels = {
+    synced: 'Synced to your account', syncing: 'Syncing…',
+    'local-only': 'Saved on this device only', error: 'Sync paused',
+  };
+  el.innerHTML = '<span class="dot"></span>'+esc(labels[mode] || 'Saved on this device only');
+}
+
+async function initArtifactSync(){
+  if(!(window.claude && typeof window.claude.use === 'function')){
+    setSyncStatus('local-only', "This page isn't running inside claude.ai, so it can only save to this browser. Use Export JSON to back up or move your data.");
+    return;
+  }
+  try{
+    artifactCap = await window.claude.use('artifact');
+  }catch(e){ artifactCap = null; }
+  if(!artifactCap){
+    setSyncStatus('local-only', "Cross-device sync isn't available in this view — your data still saves to this browser. Use Export JSON to back it up.");
+    return;
+  }
+  setSyncStatus('synced', 'Your ideas, schedule, and scripts sync to your claude.ai account whenever you make a change.');
+}
+
+function scheduleCloudSync(){
+  if(!artifactCap || !artifactWritable) return;
+  setSyncStatus('syncing');
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(doCloudSync, SYNC_DEBOUNCE_MS);
+}
+
+// Fetches this page's own currently-served source (never the live, viewer-
+// mutated DOM — that would bake in this session's modals/toasts) and swaps
+// only the embedded-state payload, so publish() gets a clean, canonical page.
+async function buildFullPageHTML(){
+  const res = await fetch(location.href, { cache:'no-store' });
+  if(!res.ok) throw new Error('Could not read current page source');
+  const source = await res.text();
+  const payload = JSON.stringify(state).replace(/</g, '\\u003c'); // never let a script/notes field close the tag early
+  // The closing tag is split so this very line can't terminate the script
+  // block it lives in — the browser's HTML parser doesn't care that it's
+  // inside a JS string literal.
+  const OPEN_TAG = '<scr'+'ipt id="embedded-state" type="application/json">';
+  const CLOSE_TAG = '</scr'+'ipt>';
+  const replaced = source.replace(
+    /<script id="embedded-state" type="application\/json">[\s\S]*?<\/script>/,
+    OPEN_TAG+payload+CLOSE_TAG
+  );
+  if(replaced===source) throw new Error('Embedded-state marker not found in page source');
+  return replaced;
+}
+
+async function doCloudSync(){
+  if(!artifactCap || !artifactWritable || syncInFlight) return;
+  syncInFlight = true;
+  try{
+    const html = await buildFullPageHTML();
+    await artifactCap.publish(html);
+    // A successful publish reloads this view to the version just written —
+    // nothing else to do; boot logic picks the same state right back up.
+  }catch(err){
+    syncInFlight = false;
+    const code = err && err.code;
+    if(code==='not_writer' || code==='not_granted' || code==='capability_disabled' || code==='capability_removed' || code==='not_declared'){
+      artifactWritable = false;
+      setSyncStatus('local-only', "This view can't sync to the cloud copy — your data still saves to this browser. Use Export JSON to back it up.");
+      return;
+    }
+    if(code==='conflict') return; // the shell is already reloading every view to the newer version
+    if(code==='rate_limited'){ setSyncStatus('syncing'); syncTimer = setTimeout(doCloudSync, SYNC_DEBOUNCE_MS*2); return; }
+    console.error('Cloud sync failed:', err);
+    setSyncStatus('error', (err && err.message) || 'Sync failed — your data is still safe on this device. It will retry on your next change.');
+  }
+}
+
+// Best-effort: catch a change right before the tab goes to the background,
+// rather than always waiting out the full debounce.
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='hidden' && syncTimer){ clearTimeout(syncTimer); doCloudSync(); }
+});
 
 function newId(){ return 'u-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7); }
 
@@ -1565,4 +1705,5 @@ function render(){
   }
 }
 render();
+initArtifactSync();
 </script>

@@ -2,27 +2,27 @@
 
 A single-file planning app for Elizabeth's content across TikTok, Instagram, and LinkedIn — built around the "one story, three engines" framework:
 
-- **Audience Growth (target 55%)** — Career, Studies & Learning, Lifestyle, Mindset, Representation & First-Gen, Money & Financial Literacy. This is the trust engine that grows reach.
-- **Empower LATAM UK (target 25%)** — mentee stories, impact stats, advocacy. Turns audience into community.
-- **Orinti / Founder (target 20%)** — agency journey, client work, mostly LinkedIn. Turns reputation into clients.
+- **Audience Growth (target 50%)** — Career, Studies & Learning, Lifestyle, Mindset, Representation & First-Gen, Money & Financial Literacy. This is the trust engine that grows reach.
+- **Orinti / Founder (target 43%)** — agency journey and client work, on LinkedIn and on Instagram + TikTok. Turns reputation into clients.
+- **Empower LATAM UK (target 7%)** — mentee stories, impact stats, advocacy. Turns audience into community.
 
 ## Weekly posting plan
 
-Content is planned per channel, 6 posts a week total:
+Content is planned per channel, 7 posts a week total:
 
 | Channel | Cadence | Slots |
 |---|---|---|
-| **LinkedIn** | 1 post/week | **Your choice**: Empower LATAM UK (social impact) or personal growth (Mindset) |
+| **LinkedIn** | 3 posts/week | 2× agency founder (Orinti) + 1× **your choice**: Empower LATAM UK (social impact) or personal growth (Mindset) |
 | **Instagram + TikTok** | 3 posts/week, cross-posted | 1× financial literacy, 1× skill (tech/AI/business), 1× entrepreneurship & career — all educational |
-| **Orinti** | 2 posts/week, any platform | Founder journey and client work — LinkedIn, TikTok, or Instagram, whichever fits the post |
+| **Orinti** | 1 post/week, Instagram + TikTok | Founder journey and client work, cross-posted to Instagram and TikTok |
 
-The LinkedIn slot isn't locked to one option — Batch Prep offers separate "from idea bank" / "new idea" buttons for Empower LATAM UK and personal growth, so you pick whichever fits that week. Orinti is its own channel rather than folded into LinkedIn, since agency content isn't limited to one platform. The 59% Growth / 33% Orinti / 8% ELUK objective-balance target on the dashboard assumes the LinkedIn choice runs roughly even over time; ELUK's real share will track however often you actually pick it.
+That adds up to 7 posts a week. The third LinkedIn slot isn't locked to one option — Batch Prep offers separate "from idea bank" / "new idea" buttons for Empower LATAM UK and personal growth, so you pick whichever fits that week. Agency content appears on two channels because it runs on two: an Orinti idea tagged LinkedIn fills a LinkedIn agency slot, one tagged Instagram/TikTok fills the Orinti channel slot. The 50% Growth / 43% Orinti / 7% ELUK objective-balance target on the dashboard assumes the LinkedIn choice runs roughly even over time; ELUK's real share will track however often you actually pick it.
 
 ## What's inside
 
-- **Dashboard** — the objective-balance chart (is a month running heavier on Orinti than the plan calls for, or light on ELUK?) and this week's channel-plan checklist, broken out by LinkedIn vs. Instagram+TikTok.
+- **Dashboard** — the objective-balance chart (is a month running heavier on Orinti than the plan calls for, or light on ELUK?) and this week's channel-plan checklist, broken out by LinkedIn, Instagram+TikTok, and Orinti.
 - **Calendar** — a Monday–Sunday week planner. Schedule an idea from the bank onto a day, or write a new one on the spot. "This week's balance" shows the platform mix (a cross-posted idea can count toward more than one platform).
-- **Batch Prep** — the Friday/Monday production workflow. One card per slot in the week's plan (2 Orinti + 1 personal growth/ELUK on LinkedIn, financial literacy + a skill + entrepreneurship on Instagram/TikTok), each with its own script textarea and a 4-stage status control (Idea → Scripted → Filmed → Posted). Write scripts here on Fridays; work down the same list on Mondays and mark each one off as you record it. Stat tiles at the top show what still needs a script vs. what's ready to record.
+- **Batch Prep** — the Friday/Monday production workflow. One card per slot in the week's plan (2 agency founder + 1 personal growth/ELUK on LinkedIn, financial literacy + a skill + entrepreneurship on Instagram/TikTok, plus 1 Orinti post on Instagram/TikTok), each with its own script textarea and a 4-stage status control (Idea → Scripted → Filmed → Posted). Write scripts here on Fridays; work down the same list on Mondays and mark each one off as you record it. Stat tiles at the top show what still needs a script vs. what's ready to record.
 
   If a week looks completely empty, that's expected once in a while — it means nothing's prepped there yet, not that anything broke. If you *do* have content prepped elsewhere, a banner points you to the nearest week that has it, with a one-click jump.
 

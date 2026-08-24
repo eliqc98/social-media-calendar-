@@ -351,16 +351,17 @@ const PILLAR_OBJECTIVE = {
   representation:'growth', money:'growth', orinti:'orinti', eluk:'eluk',
 };
 
-// Derived from the weekly channel plan below. The 3rd LinkedIn slot can go
-// to either Empower LATAM UK or personal growth (Mindset, a growth-objective
-// pillar) each week — these targets assume that split runs roughly even
-// over time; ELUK's real share will track however often you actually pick it.
+// Derived from the weekly channel plan below — 7 posts a week: 3 growth on
+// Instagram+TikTok, 3 agency (2 LinkedIn + 1 Instagram/TikTok), and 1 LinkedIn
+// slot that goes to either personal growth (Mindset, a growth pillar) or
+// Empower LATAM UK. These targets assume that last slot runs roughly even over
+// time; ELUK's real share will track however often you actually pick it.
 const OBJECTIVES = [
-  { id:'growth', label:'Audience Growth — Personal Brand', short:'Growth', target:59, colorVar:'--obj-growth',
+  { id:'growth', label:'Audience Growth — Personal Brand', short:'Growth', target:50, colorVar:'--obj-growth',
     blurb:'3 educational cross-posts a week on Instagram + TikTok, plus personal-growth LinkedIn posts when that slot goes to Mindset.' },
-  { id:'orinti', label:'Orinti — Founder / Agency', short:'Orinti', target:33, colorVar:'--obj-orinti',
-    blurb:'2 posts a week on the agency — founder journey and client work, on whichever platform fits.' },
-  { id:'eluk',   label:'Empower LATAM UK — Impact', short:'ELUK', target:8, colorVar:'--obj-eluk',
+  { id:'orinti', label:'Orinti — Founder / Agency', short:'Orinti', target:43, colorVar:'--obj-orinti',
+    blurb:'3 posts a week on the agency — 2 on LinkedIn, 1 on Instagram + TikTok.' },
+  { id:'eluk',   label:'Empower LATAM UK — Impact', short:'ELUK', target:7, colorVar:'--obj-eluk',
     blurb:'A LinkedIn post carrying the Empower LATAM UK impact story, roughly every other week.' },
 ];
 const OBJECTIVE_MAP = Object.fromEntries(OBJECTIVES.map(o=>[o.id,o]));
@@ -388,9 +389,9 @@ function normalizePlatforms(list){
 // own; Orinti is its own channel on top of both — it isn't tied to one
 // platform, so an Orinti post can go on LinkedIn, TikTok, or Instagram.
 const CHANNELS = {
-  linkedin: { id:'linkedin', label:'LinkedIn', sub:'1 post/week — personal growth or ELUK', platforms:['linkedin'] },
+  linkedin: { id:'linkedin', label:'LinkedIn', sub:'3 posts/week — 2 agency founder + 1 personal growth or ELUK', platforms:['linkedin'] },
   social:   { id:'social',   label:'Instagram + TikTok', sub:'3 posts/week, cross-posted — all educational', platforms:['tiktok','instagram'] },
-  orinti:   { id:'orinti',   label:'Orinti', sub:'2 posts/week — any platform: LinkedIn, TikTok, or Instagram', platforms:['linkedin','tiktok','instagram'] },
+  orinti:   { id:'orinti',   label:'Orinti', sub:'1 post/week — Instagram + TikTok', platforms:['tiktok','instagram'] },
 };
 
 const FORMATS = [
@@ -426,8 +427,9 @@ const LANGS = [
 // whichever you pick.
 function getWeeklyPlan(weekStart){
   return [
+    { id:'li-orinti', channel:'linkedin', pillar:'orinti', need:2, label:'Agency founder' },
     { id:'li-alt',    channel:'linkedin', pillar:['mindset','eluk'], need:1, label:'Personal growth or ELUK' },
-    { id:'or-orinti', channel:'orinti', pillar:'orinti', need:2, label:'Orinti — marketing agency' },
+    { id:'or-orinti', channel:'orinti', pillar:'orinti', need:1, label:'Orinti — marketing agency' },
     { id:'so-money',  channel:'social', pillar:'money',   need:1, label:'Financial literacy' },
     { id:'so-skill',  channel:'social', pillar:'studies', need:1, label:'Skill — tech / AI / business' },
     { id:'so-career', channel:'social', pillar:'career',  need:1, label:'Entrepreneurship & career' },
@@ -944,7 +946,7 @@ function renderDashboard(){
     <div class="page-head">
       <div class="eyebrow">Dashboard</div>
       <h2>La generación que rompe el ciclo</h2>
-      <p>One story, three engines: personal-brand content builds trust, Empower LATAM UK turns it into community, Orinti turns it into clients. 3 posts/week on LinkedIn, 3 cross-posted on Instagram + TikTok.</p>
+      <p>One story, three engines: personal-brand content builds trust, Empower LATAM UK turns it into community, Orinti turns it into clients. 3 posts/week on LinkedIn, 3 cross-posted on Instagram + TikTok, plus 1 Orinti post on Instagram + TikTok.</p>
     </div>
 
     <div class="grid stat-row">
@@ -956,7 +958,7 @@ function renderDashboard(){
     <div class="grid" style="grid-template-columns:1.3fr 1fr; align-items:start;">
       <div class="card">
         <div class="section-title">Objective balance ${hasBalanceData? '· '+(monthIdeas.length? 'this month':'this week') : ''}</div>
-        ${hasBalanceData ? renderBalanceChart(balance) : '<p style="color:var(--ink-muted); font-size:13px;">Schedule a few ideas onto the calendar to see how your content mix compares to the 59 / 33 / 8 target.</p>'}
+        ${hasBalanceData ? renderBalanceChart(balance) : '<p style="color:var(--ink-muted); font-size:13px;">Schedule a few ideas onto the calendar to see how your content mix compares to the 50 / 43 / 7 target.</p>'}
       </div>
       <div class="card">
         <div class="section-title">This week's channel plan — ${fmtRange(state.weekStart)}</div>
@@ -1213,7 +1215,7 @@ function renderProduction(){
       <div class="prep-slots">${renderPrepSlots(plan.filter(p=>p.channel==='social'))}</div>
     </div>
     <div class="prep-channel">
-      <h3 class="prep-channel-title">Orinti <span class="prep-channel-note">— any platform</span></h3>
+      <h3 class="prep-channel-title">Orinti <span class="prep-channel-note">— Instagram + TikTok</span></h3>
       <div class="prep-slots">${renderPrepSlots(plan.filter(p=>p.channel==='orinti'))}</div>
     </div>
     ${leftovers.length ? `
